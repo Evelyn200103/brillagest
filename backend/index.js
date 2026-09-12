@@ -81,5 +81,36 @@ app.get('/api/productos', async (req, res) => {
   }
 });
 
+// Actualizar un producto existente
+app.put('/api/productos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, categoria, material, peso, precio, stock, marca, tipo } = req.body;
+
+    if (!nombre || !categoria || !precio) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    if (categoria !== 'Relojes' && !material) {
+      return res.status(400).json({ error: 'El material es obligatorio para esta categoría' });
+    }
+
+    const result = await pool.query(
+      `UPDATE productos
+       SET nombre = $1, categoria = $2, material = $3, peso = $4, precio = $5, stock = $6, marca = $7, tipo = $8
+       WHERE id = $9 RETURNING *`,
+      [nombre, categoria, material || null, peso || null, precio, stock || 0, marca || null, tipo || null, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));

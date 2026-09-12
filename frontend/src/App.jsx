@@ -10,6 +10,11 @@ const CATEGORIAS = [
 
 const MATERIALES = ['Oro 18k', 'Oro 10k', 'Plata 925'];
 
+const FORM_VACIO = {
+  nombre: '', categoria: 'Anillos', material: 'Oro 18k',
+  peso: '', precio: '', stock: '', marca: '', tipo: 'Original'
+};
+
 function App() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -18,16 +23,8 @@ function App() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
 
-  const [form, setForm] = useState({
-    nombre: '',
-    categoria: 'Anillos',
-    material: 'Oro 18k',
-    peso: '',
-    precio: '',
-    stock: '',
-    marca: '',
-    tipo: 'Original'
-  });
+  const [form, setForm] = useState(FORM_VACIO);
+  const [editandoId, setEditandoId] = useState(null);
 
   const esReloj = form.categoria === 'Relojes';
 
@@ -52,6 +49,26 @@ function App() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleEditar = (p) => {
+    setEditandoId(p.id);
+    setForm({
+      nombre: p.nombre,
+      categoria: p.categoria,
+      material: p.material || 'Oro 18k',
+      peso: p.peso ?? '',
+      precio: p.precio ?? '',
+      stock: p.stock ?? '',
+      marca: p.marca || '',
+      tipo: p.tipo || 'Original'
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoId(null);
+    setForm(FORM_VACIO);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
@@ -64,8 +81,11 @@ function App() {
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/productos`, {
-        method: 'POST',
+      const url = editandoId ? `${API_URL}/api/productos/${editandoId}` : `${API_URL}/api/productos`;
+      const method = editandoId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -75,11 +95,9 @@ function App() {
         throw new Error(err.error || 'Error al guardar el producto');
       }
 
-      setForm({
-        nombre: '', categoria: 'Anillos', material: 'Oro 18k',
-        peso: '', precio: '', stock: '', marca: '', tipo: 'Original'
-      });
-      setMensaje('Producto registrado con éxito.');
+      setMensaje(editandoId ? 'Producto actualizado con éxito.' : 'Producto registrado con éxito.');
+      setEditandoId(null);
+      setForm(FORM_VACIO);
       cargarProductos();
     } catch (err) {
       setMensaje(err.message);
@@ -90,7 +108,7 @@ function App() {
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
 
-      <h2>Registrar producto</h2>
+      <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
         <input
           name="nombre"
@@ -150,7 +168,13 @@ function App() {
           value={form.stock}
           onChange={handleChange}
         />
-        <button type="submit">Guardar producto</button>
+
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <button type="submit">{editandoId ? 'Actualizar producto' : 'Guardar producto'}</button>
+          {editandoId && (
+            <button type="button" onClick={cancelarEdicion}>Cancelar edición</button>
+          )}
+        </div>
       </form>
 
       {mensaje && <p>{mensaje}</p>}
@@ -191,6 +215,7 @@ function App() {
               <th>Peso (g)</th>
               <th>Precio</th>
               <th>Stock</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -203,6 +228,9 @@ function App() {
                 <td>{p.peso ?? '—'}</td>
                 <td>${p.precio}</td>
                 <td>{p.stock}</td>
+                <td>
+                  <button type="button" onClick={() => handleEditar(p)}>Editar</button>
+                </td>
               </tr>
             ))}
           </tbody>
