@@ -15,6 +15,9 @@ function App() {
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState('');
 
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('');
+
   const [form, setForm] = useState({
     nombre: '',
     categoria: 'Anillos',
@@ -28,9 +31,13 @@ function App() {
 
   const esReloj = form.categoria === 'Relojes';
 
-  const cargarProductos = () => {
+  const cargarProductos = (q = busqueda, categoria = filtroCategoria) => {
     setCargando(true);
-    fetch(`${API_URL}/api/productos`)
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (categoria) params.set('categoria', categoria);
+
+    fetch(`${API_URL}/api/productos?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => setProductos(data))
       .catch(() => setMensaje('No se pudo cargar la lista de productos'))
@@ -149,10 +156,30 @@ function App() {
       {mensaje && <p>{mensaje}</p>}
 
       <h2>Productos registrados</h2>
+
+      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
+        <input
+          placeholder="Buscar por nombre o SKU"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <select
+          value={filtroCategoria}
+          onChange={(e) => setFiltroCategoria(e.target.value)}
+        >
+          <option value="">Todas las categorías</option>
+          {CATEGORIAS.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <button type="button" onClick={() => cargarProductos()}>Buscar</button>
+      </div>
+
       {cargando ? (
         <p>Cargando...</p>
       ) : productos.length === 0 ? (
-        <p>Todavía no hay productos registrados.</p>
+        <p>No se encontraron productos.</p>
       ) : (
         <table border="1" cellPadding="6" style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>

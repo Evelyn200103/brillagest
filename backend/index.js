@@ -55,10 +55,26 @@ app.post('/api/productos', async (req, res) => {
   }
 });
 
-// Listar todos los productos
+// Listar productos (con búsqueda y filtro opcional)
 app.get('/api/productos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM productos ORDER BY id DESC');
+    const { q, categoria } = req.query;
+    let sql = 'SELECT * FROM productos WHERE 1=1';
+    const params = [];
+
+    if (q) {
+      params.push(`%${q}%`);
+      sql += ` AND (nombre ILIKE $${params.length} OR sku ILIKE $${params.length})`;
+    }
+
+    if (categoria) {
+      params.push(categoria);
+      sql += ` AND categoria = $${params.length}`;
+    }
+
+    sql += ' ORDER BY id DESC';
+
+    const result = await pool.query(sql, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
