@@ -69,6 +69,23 @@ function App() {
     setForm(FORM_VACIO);
   };
 
+    const handleEliminar = async (p) => {
+    const confirmar = window.confirm(`¿Seguro que quieres eliminar "${p.nombre}" (${p.sku})? Esta acción no se puede deshacer.`);
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/productos/${p.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al eliminar el producto');
+      }
+      setMensaje('Producto eliminado con éxito.');
+      cargarProductos();
+    } catch (err) {
+      setMensaje(err.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
@@ -229,7 +246,8 @@ function App() {
                 <td>${p.precio}</td>
                 <td>{p.stock}</td>
                 <td>
-                  <button type="button" onClick={() => handleEditar(p)}>Editar</button>
+                  <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
+                  <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>
                 </td>
               </tr>
             ))}
