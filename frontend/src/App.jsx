@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
   import FormEntrada from './Entradalnventario';
+  import FormSalida from './SalidaInventario';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -126,6 +127,7 @@ function App() {
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
         <FormEntrada productos={productos} onRegistrada={cargarProductos} />
+        <FormSalida productos={productos} onRegistrada={cargarProductos} />
 
       <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
