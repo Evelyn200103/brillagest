@@ -184,5 +184,69 @@ app.post('/api/movimientos/entrada', async (req, res) => {
   }
 });
 
+// Registrar una salida de inventario (HU-006)
+app.post('/api/movimientos/salida', async (req, res) => {
+  const { producto_id, cantidad, responsable, observacion } = req.body;
+
+  const productoId = Number(producto_id);
+  const cant = Number(cantidad);
+
+  if (!Number.isInteger(productoId) || productoId <= 0) {
+    return res.status(400).json({ error: 'Producto inválido' });
+  }
+
+  if (!Number.isInteger(cant) || cant <= 0) {
+    return res.status(400).json({ error: 'La cantidad debe ser un número entero mayor que cero' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const producto = await client.query(
+      'SELECT id, stock FROM productos WHERE id = $1 FOR UPDATE',
+      [productoId]
+    );
+
+    if (producto.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    const stockActual = producto.rows[0].stock || 0;
+    if (cant > stockActual) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        error: `Stock insuficiente. Disponible: ${stockActual}`
+      });
+    }
+
+    const movimiento = await client.query(
+      `INSERT INTO movimientos (producto_id, tipo, cantidad, responsable, observacion)
+       VALUES ($1, 'SALIDA', $2, $3, $4) RETURNING *`,
+      [productoId, cant, responsable || null, observacion || null]
+    );
+
+    const actualizado = await client.query(
+      `UPDATE productos SET stock = stock - $1
+       WHERE id = $2 RETURNING id, nombre, stock`,
+      [cant, productoId]
+    );
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      mensaje: 'Salida registrada correctamente',
+      movimiento: movimiento.rows[0],
+      producto: actualizado.rows[0]
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
