@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
   import FormEntrada from './Entradalnventario';
   import FormSalida from './SalidaInventario';
+  import Existencias from './Existencias';  
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,6 +28,7 @@ function App() {
 
   const [form, setForm] = useState(FORM_VACIO);
   const [editandoId, setEditandoId] = useState(null);
+  const [versionExistencias, setVersionExistencias] = useState(0);
 
   const esReloj = form.categoria === 'Relojes';
 
@@ -41,6 +43,11 @@ function App() {
       .then((data) => setProductos(data))
       .catch(() => setMensaje('No se pudo cargar la lista de productos'))
       .finally(() => setCargando(false));
+  };
+
+  const alRegistrarMovimiento = () => {
+  cargarProductos();
+  setVersionExistencias((v) => v + 1);
   };
 
   useEffect(() => {
@@ -126,8 +133,9 @@ function App() {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
-        <FormEntrada productos={productos} onRegistrada={cargarProductos} />
-        <FormSalida productos={productos} onRegistrada={cargarProductos} />
+        <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
+        <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
+        <Existencias categorias={CATEGORIAS} version={versionExistencias} />
 
       <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>

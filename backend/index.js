@@ -248,5 +248,44 @@ app.post('/api/movimientos/salida', async (req, res) => {
   }
 });
 
+// Consultar existencias (HU-007)
+// Regla provisional: la HU-009 (alertas de stock bajo) definirá el umbral definitivo.
+const UMBRAL_STOCK_BAJO = 5;
+
+app.get('/api/existencias', async (req, res) => {
+  try {
+    const { q, categoria } = req.query;
+    let sql = `SELECT id, sku, nombre, categoria, material, marca, tipo, stock
+               FROM productos WHERE 1=1`;
+    const params = [];
+
+    if (q) {
+      params.push(`%${q}%`);
+      sql += ` AND (nombre ILIKE $${params.length} OR sku ILIKE $${params.length})`;
+    }
+
+    if (categoria) {
+      params.push(categoria);
+      sql += ` AND categoria = $${params.length}`;
+    }
+
+    sql += ' ORDER BY nombre ASC';
+
+    const result = await pool.query(sql, params);
+
+    const productos = result.rows.map((p) => {
+      const stock = p.stock || 0;
+      let estado = 'DISPONIBLE';
+      if (stock === 0) estado = 'SIN_STOCK';
+      else if (stock <= UMBRAL_STOCK_BAJO) estado = 'STOCK_BAJO';
+      return { ...p, stock, estado };
+    });
+
+    res.json(productos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
