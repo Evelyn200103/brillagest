@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+  import HistorialMovimientos from './HistorialMovimientos.jsx';
   import FormEntrada from './Entradalnventario';
   import FormSalida from './SalidaInventario';
   import Existencias from './Existencias';  
@@ -133,6 +134,7 @@ function App() {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
+        <HistorialMovimientos />
         <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
         <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
         <Existencias categorias={CATEGORIAS} version={versionExistencias} />

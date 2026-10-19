@@ -286,6 +286,48 @@ app.get('/api/existencias', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Consultar movimientos de inventario (HU-008)
+app.get('/api/movimientos', async (req, res) => {
+  try {
+    const { tipo, producto_id } = req.query;
+    const condiciones = [];
+    const params = [];
+
+    if (tipo) {
+      const tipoNormalizado = String(tipo).toUpperCase();
+      if (!['ENTRADA', 'SALIDA'].includes(tipoNormalizado)) {
+        return res.status(400).json({ error: 'El tipo debe ser ENTRADA o SALIDA' });
+      }
+      params.push(tipoNormalizado);
+      condiciones.push(`m.tipo = $${params.length}`);
+    }
+
+    if (producto_id) {
+      const productoId = Number(producto_id);
+      if (!Number.isInteger(productoId) || productoId <= 0) {
+        return res.status(400).json({ error: 'Producto inválido' });
+      }
+      params.push(productoId);
+      condiciones.push(`m.producto_id = $${params.length}`);
+    }
+
+    const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
+
+    const result = await pool.query(
+      `SELECT m.id, m.producto_id, p.sku, p.nombre AS producto, m.tipo, m.cantidad,
+              m.creado_en, m.responsable, m.observacion
+       FROM movimientos m
+       JOIN productos p ON p.id = m.producto_id
+       ${where}
+       ORDER BY m.creado_en DESC, m.id DESC`,
+      params
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
