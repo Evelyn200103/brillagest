@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
   import HistorialMovimientos from './HistorialMovimientos.jsx';
   import FormEntrada from './Entradalnventario';
   import FormSalida from './SalidaInventario';
-  import Existencias from './Existencias';  
+  import Existencias from './Existencias';
+  import Reportes from './Reportes';  
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -90,7 +91,7 @@ function App() {
         throw new Error(err.error || 'Error al eliminar el producto');
       }
       setMensaje('Producto eliminado con éxito.');
-      cargarProductos();
+      alRegistrarMovimiento();
     } catch (err) {
       setMensaje(err.message);
     }
@@ -125,7 +126,7 @@ function App() {
       setMensaje(editandoId ? 'Producto actualizado con éxito.' : 'Producto registrado con éxito.');
       setEditandoId(null);
       setForm(FORM_VACIO);
-      cargarProductos();
+      alRegistrarMovimiento();
     } catch (err) {
       setMensaje(err.message);
     }
@@ -138,7 +139,7 @@ function App() {
         <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
         <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
         <Existencias categorias={CATEGORIAS} version={versionExistencias} />
-
+        <Reportes version={versionExistencias} />
       <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
         <input
