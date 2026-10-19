@@ -249,8 +249,8 @@ app.post('/api/movimientos/salida', async (req, res) => {
 });
 
 // Consultar existencias (HU-007)
-// Regla provisional: la HU-009 (alertas de stock bajo) definirá el umbral definitivo.
-const UMBRAL_STOCK_BAJO = 5;
+// Nivel mínimo de existencias, compartido con las alertas de stock bajo (HU-009)
+const STOCK_MINIMO = Number(process.env.STOCK_MINIMO) || 5;
 
 app.get('/api/existencias', async (req, res) => {
   try {
@@ -277,7 +277,7 @@ app.get('/api/existencias', async (req, res) => {
       const stock = p.stock || 0;
       let estado = 'DISPONIBLE';
       if (stock === 0) estado = 'SIN_STOCK';
-      else if (stock <= UMBRAL_STOCK_BAJO) estado = 'STOCK_BAJO';
+      else if (stock <= STOCK_MINIMO) estado = 'STOCK_BAJO';
       return { ...p, stock, estado };
     });
 
@@ -329,5 +329,106 @@ app.get('/api/movimientos', async (req, res) => {
   }
 });
 
+// Alertas de stock bajo (HU-009)
+
+
+app.get('/api/alertas/stock-bajo', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, sku, nombre, categoria, COALESCE(stock, 0) AS stock
+       FROM productos
+       WHERE COALESCE(stock, 0) <= $1
+       ORDER BY stock ASC, nombre ASC`,
+      [STOCK_MINIMO]
+    );
+
+    const alertas = result.rows.map((p) => ({
+      ...p,
+      estado: p.stock === 0 ? 'AGOTADO' : 'STOCK_BAJO'
+    }));
+
+    res.json({ stock_minimo: STOCK_MINIMO, total: alertas.length, alertas });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 4000;
+
+// Reportes básicos de inventario (HU-010)
+// Usa STOCK_MINIMO, el mismo nivel definido para las alertas (HU-009)
+app.get('/api/reportes/inventario', async (req, res) => {
+  try {
+    // Periodo (en días) para el resumen de movimientos. Por defecto, 30.
+    const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);
+    if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
+      return res.status(400).json({ error: 'El periodo debe ser un número entero de días entre 1 y 365' });
+    }
+
+    const [resumen, categorias, movimientos, stockBajo] = await Promise.all([
+      pool.query(
+        `SELECT COUNT(*)::int AS total_productos,
+                COALESCE(SUM(COALESCE(stock, 0)), 0)::int AS total_unidades,
+                COALESCE(SUM(COALESCE(stock, 0) * precio), 0)::float AS valor_inventario,
+                COUNT(*) FILTER (WHERE COALESCE(stock, 0) = 0)::int AS agotados,
+                COUNT(*) FILTER (WHERE COALESCE(stock, 0) > 0 AND COALESCE(stock, 0) <= $1)::int AS stock_bajo
+         FROM productos`,
+        [STOCK_MINIMO]
+      ),
+      pool.query(
+        `SELECT categoria,
+                COUNT(*)::int AS productos,
+                COALESCE(SUM(COALESCE(stock, 0)), 0)::int AS unidades,
+                COALESCE(SUM(COALESCE(stock, 0) * precio), 0)::float AS valor
+         FROM productos
+         GROUP BY categoria
+         ORDER BY categoria ASC`
+      ),
+      pool.query(
+        `SELECT tipo,
+                COUNT(*)::int AS movimientos,
+                COALESCE(SUM(cantidad), 0)::int AS unidades
+         FROM movimientos
+         WHERE creado_en >= NOW() - make_interval(days => $1)
+         GROUP BY tipo`,
+        [dias]
+      ),
+      pool.query(
+        `SELECT id, sku, nombre, categoria, COALESCE(stock, 0) AS stock
+         FROM productos
+         WHERE COALESCE(stock, 0) <= $1
+         ORDER BY COALESCE(stock, 0) ASC, nombre ASC
+         LIMIT 10`,
+        [STOCK_MINIMO]
+      )
+    ]);
+
+    const porTipo = { ENTRADA: { movimientos: 0, unidades: 0 }, SALIDA: { movimientos: 0, unidades: 0 } };
+    movimientos.rows.forEach((m) => {
+      porTipo[m.tipo] = { movimientos: m.movimientos, unidades: m.unidades };
+    });
+
+    res.json({
+      generado_en: new Date().toISOString(),
+      hay_informacion: resumen.rows[0].total_productos > 0,
+      stock_minimo: STOCK_MINIMO,
+      resumen: resumen.rows[0],
+      por_categoria: categorias.rows,
+      movimientos: {
+        dias,
+        total: porTipo.ENTRADA.movimientos + porTipo.SALIDA.movimientos,
+        entradas: porTipo.ENTRADA,
+        salidas: porTipo.SALIDA
+      },
+      productos_a_reponer: stockBajo.rows.map((p) => ({
+        ...p,
+        estado: p.stock === 0 ? 'AGOTADO' : 'STOCK_BAJO'
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
