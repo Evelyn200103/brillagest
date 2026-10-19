@@ -249,8 +249,8 @@ app.post('/api/movimientos/salida', async (req, res) => {
 });
 
 // Consultar existencias (HU-007)
-// Regla provisional: la HU-009 (alertas de stock bajo) definirá el umbral definitivo.
-const UMBRAL_STOCK_BAJO = 5;
+// Nivel mínimo de existencias, compartido con las alertas de stock bajo (HU-009)
+const STOCK_MINIMO = Number(process.env.STOCK_MINIMO) || 5;
 
 app.get('/api/existencias', async (req, res) => {
   try {
@@ -277,7 +277,7 @@ app.get('/api/existencias', async (req, res) => {
       const stock = p.stock || 0;
       let estado = 'DISPONIBLE';
       if (stock === 0) estado = 'SIN_STOCK';
-      else if (stock <= UMBRAL_STOCK_BAJO) estado = 'STOCK_BAJO';
+      else if (stock <= STOCK_MINIMO) estado = 'STOCK_BAJO';
       return { ...p, stock, estado };
     });
 
@@ -324,6 +324,30 @@ app.get('/api/movimientos', async (req, res) => {
     );
 
     res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Alertas de stock bajo (HU-009)
+
+
+app.get('/api/alertas/stock-bajo', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, sku, nombre, categoria, COALESCE(stock, 0) AS stock
+       FROM productos
+       WHERE COALESCE(stock, 0) <= $1
+       ORDER BY stock ASC, nombre ASC`,
+      [STOCK_MINIMO]
+    );
+
+    const alertas = result.rows.map((p) => ({
+      ...p,
+      estado: p.stock === 0 ? 'AGOTADO' : 'STOCK_BAJO'
+    }));
+
+    res.json({ stock_minimo: STOCK_MINIMO, total: alertas.length, alertas });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
