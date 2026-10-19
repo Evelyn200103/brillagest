@@ -511,6 +511,44 @@ app.get('/api/catalogo/categorias/:nombre/productos', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ===== HU-014: Consultar disponibilidad de productos =====
+app.get("/api/disponibilidad/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (isNaN(Number(id))) {
+      return res.status(400).json({ error: "El id debe ser numérico" });
+    }
+
+    const resultado = await pool.query(
+      `SELECT id, sku, nombre, categoria, precio, stock
+       FROM productos
+       WHERE id = $1`,
+      [id]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    const p = resultado.rows[0];
+    const disponible = p.stock > 0;
+
+    res.json({
+      id: p.id,
+      sku: p.sku,
+      nombre: p.nombre,
+      categoria: p.categoria,
+      precio: p.precio,
+      disponible: disponible,
+      estado: disponible ? "Disponible" : "No disponible",
+      consultado_en: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error en GET /api/disponibilidad/:id", error);
+    res.status(500).json({ error: "Error al consultar la disponibilidad" });
+  }
+});
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
 
 // Catálogo público: detalle de un producto 
