@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
   import FormEntrada from './Entradalnventario';
   import FormSalida from './SalidaInventario';
   import Existencias from './Existencias';  
+  import AlertasStock from './AlertasStock';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -138,6 +139,7 @@ function App() {
         <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
         <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
         <Existencias categorias={CATEGORIAS} version={versionExistencias} />
+        <AlertasStock productos={productos} />
 
       <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
