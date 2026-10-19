@@ -430,5 +430,35 @@ app.get('/api/reportes/inventario', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ===== HU-011: Catálogo público de productos disponibles =====
+app.get("/api/catalogo", async (req, res) => {
+  try {
+    const { q, categoria } = req.query;
+    const condiciones = ["stock > 0"];
+    const params = [];
 
+    if (q) {
+      params.push(`%${q}%`);
+      condiciones.push(`(nombre ILIKE $${params.length} OR sku ILIKE $${params.length})`);
+    }
+    if (categoria) {
+      params.push(categoria);
+      condiciones.push(`categoria = $${params.length}`);
+    }
+
+    const sql = `
+      SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
+             creado_en AT TIME ZONE 'UTC' AS creado_en
+      FROM productos
+      WHERE ${condiciones.join(" AND ")}
+      ORDER BY nombre ASC
+    `;
+
+    const resultado = await pool.query(sql, params);
+    res.json(resultado.rows);
+  } catch (error) {
+    console.error("Error en GET /api/catalogo:", error);
+    res.status(500).json({ error: "Error al consultar el catálogo" });
+  }
+});
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
