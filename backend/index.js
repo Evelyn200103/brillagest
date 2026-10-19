@@ -461,4 +461,52 @@ app.get("/api/catalogo", async (req, res) => {
     res.status(500).json({ error: "Error al consultar el catálogo" });
   }
 });
+
+// Catálogo público: consultar productos por categoría (HU-012)
+const CATEGORIAS_CATALOGO = [
+  'Anillos', 'Pulseras', 'Cadenas', 'Topos', 'Dijes',
+  'Aretes largos', 'Candongas', 'Candongas con piedrería',
+  'Argollas', 'Tobilleras', 'Relojes'
+];
+
+// Lista de categorías disponibles, con cuántos productos tiene cada una
+app.get('/api/catalogo/categorias', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT categoria, COUNT(*)::int AS total FROM productos GROUP BY categoria'
+    );
+    const conteo = Object.fromEntries(result.rows.map((r) => [r.categoria, r.total]));
+
+    res.json(
+      CATEGORIAS_CATALOGO.map((nombre) => ({ nombre, total: conteo[nombre] || 0 }))
+    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Productos de una categoría
+app.get('/api/catalogo/categorias/:nombre/productos', async (req, res) => {
+  try {
+    const solicitada = String(req.params.nombre).trim().toLowerCase();
+    const categoria = CATEGORIAS_CATALOGO.find((c) => c.toLowerCase() === solicitada);
+
+    if (!categoria) {
+      return res.status(404).json({ error: 'La categoría solicitada no existe' });
+    }
+
+    const result = await pool.query(
+      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
+              (COALESCE(stock, 0) > 0) AS disponible
+       FROM productos
+       WHERE categoria = $1
+       ORDER BY nombre ASC`,
+      [categoria]
+    );
+
+    res.json({ categoria, total: result.rows.length, productos: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
