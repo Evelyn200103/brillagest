@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import DetalleProducto from './DetalleProducto';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -8,6 +9,7 @@ function CatalogoCategorias() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [detalleId, setDetalleId] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/catalogo/categorias`)
@@ -37,6 +39,10 @@ function CatalogoCategorias() {
       })
       .finally(() => setCargando(false));
   };
+
+  if (detalleId) {
+    return <DetalleProducto id={detalleId} onVolver={() => setDetalleId(null)} />;
+  }
 
   return (
     <div style={{ marginBottom: '2rem' }}>
@@ -79,6 +85,9 @@ function CatalogoCategorias() {
               {p.peso && <p style={{ margin: '0.3rem 0' }}>{p.peso} g</p>}
               <p style={{ margin: '0.3rem 0' }}>${Number(p.precio).toLocaleString('es-CO')}</p>
               {!p.disponible && <span style={{ color: 'crimson' }}>Agotado</span>}
+              <div style={{ marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setDetalleId(p.id)}>Ver detalle →</button>
+              </div>
             </div>
           ))}
         </div>

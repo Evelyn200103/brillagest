@@ -23,8 +23,10 @@ app.get('/api/health', async (req, res) => {
 
 // Generar un SKU simple automático, ej: PROD-0007
 async function generarSku() {
-  const result = await pool.query('SELECT COUNT(*) FROM productos');
-  const siguiente = parseInt(result.rows[0].count, 10) + 1;
+  const result = await pool.query(
+    `SELECT COALESCE(MAX(SUBSTRING(sku FROM 'PROD-(\\d+)')::int), 0) AS maximo FROM productos`
+  );
+  const siguiente = result.rows[0].maximo + 1;
   return `PROD-${String(siguiente).padStart(4, '0')}`;
 }
 
@@ -430,7 +432,7 @@ app.get('/api/reportes/inventario', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// ===== HU-011: Catálogo público de productos disponibles =====
+// Catálogo público de productos disponibles 
 app.get("/api/catalogo", async (req, res) => {
   try {
     const { q, categoria } = req.query;
@@ -462,7 +464,7 @@ app.get("/api/catalogo", async (req, res) => {
   }
 });
 
-// Catálogo público: consultar productos por categoría (HU-012)
+// Catálogo público: consultar productos por categoría 
 const CATEGORIAS_CATALOGO = [
   'Anillos', 'Pulseras', 'Cadenas', 'Topos', 'Dijes',
   'Aretes largos', 'Candongas', 'Candongas con piedrería',
@@ -510,3 +512,36 @@ app.get('/api/catalogo/categorias/:nombre/productos', async (req, res) => {
   }
 });
 app.listen(PORT, () => console.log(`Backend corriendo en el puerto ${PORT}`));
+
+// Catálogo público: detalle de un producto 
+app.get('/api/catalogo/productos/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'El identificador del producto no es válido' });
+    }
+
+    const result = await pool.query(
+      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
+              (COALESCE(stock, 0) > 0) AS disponible
+       FROM productos
+       WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'El producto solicitado no existe o ya no está disponible para consulta'
+      });
+    }
+
+    const producto = result.rows[0];
+    res.json({
+      ...producto,
+      disponibilidad: producto.disponible ? 'DISPONIBLE' : 'AGOTADO'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

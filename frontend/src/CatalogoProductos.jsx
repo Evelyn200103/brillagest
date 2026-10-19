@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DetalleProducto from "./DetalleProducto";
 
 const API = "http://localhost:4000";
 
@@ -42,19 +43,7 @@ export default function CatalogoProductos() {
   const categorias = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
 
   if (seleccionado) {
-    return (
-      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, marginTop: 24 }}>
-        <button onClick={() => setSeleccionado(null)}>← Volver al catálogo</button>
-        <h2>{seleccionado.nombre}</h2>
-        <p><b>SKU:</b> {seleccionado.sku}</p>
-        <p><b>Categoría:</b> {seleccionado.categoria || "-"}</p>
-        <p><b>Material:</b> {seleccionado.material || "-"}</p>
-        <p><b>Marca:</b> {seleccionado.marca || "-"}</p>
-        <p><b>Tipo:</b> {seleccionado.tipo || "-"}</p>
-        <p><b>Peso:</b> {seleccionado.peso ? `${seleccionado.peso} g` : "-"}</p>
-        <p><b>Precio:</b> {formatoPrecio(seleccionado.precio)}</p>
-      </section>
-    );
+    return <DetalleProducto id={seleccionado.id} onVolver={() => setSeleccionado(null)} />;
   }
 
   return (
