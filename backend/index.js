@@ -315,7 +315,7 @@ app.get('/api/movimientos', async (req, res) => {
 
     const result = await pool.query(
       `SELECT m.id, m.producto_id, p.sku, p.nombre AS producto, m.tipo, m.cantidad,
-              m.creado_en, m.responsable, m.observacion
+              m.creado_en AT TIME ZONE 'UTC' AS creado_en, m.responsable, m.observacion
        FROM movimientos m
        JOIN productos p ON p.id = m.producto_id
        ${where}
