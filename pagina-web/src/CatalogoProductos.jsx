@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DetalleProducto from "./DetalleProducto";
 
-const API = "http://localhost:4000";
+const API = import.meta.env.VITE_API_URL;
 
 function formatoPrecio(valor) {
   const numero = Number(valor);

@@ -5,9 +5,6 @@ import { useEffect, useState } from 'react';
   import Existencias from './Existencias';
   import Reportes from './Reportes';
   import AlertasStock from './AlertasStock';
-  import CatalogoProductos from "./CatalogoProductos";
-  import CatalogoCategorias from "./CatalogoCategorias";
-  import DisponibilidadProducto from "./DisponibilidadProducto";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -139,9 +136,6 @@ function App() {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
-      <DisponibilidadProducto />
-      <CatalogoProductos />
-      <CatalogoCategorias />
         <HistorialMovimientos />
         <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
         <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
