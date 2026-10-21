@@ -77,7 +77,7 @@ export default function CatalogoProductos() {
       {cargando && <p>Cargando catálogo...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
       {!cargando && !error && productos.length === 0 && (
-        <p>No hay productos disponibles en el catálogo.</p>
+        <p>No hay productos en el catálogo.</p>
       )}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
@@ -98,6 +98,9 @@ export default function CatalogoProductos() {
             <p style={{ margin: 0, fontSize: 13 }}>{p.categoria || "-"}</p>
             <p style={{ margin: 0, fontSize: 13 }}>{p.material || p.marca || "-"}</p>
             <p style={{ margin: "8px 0 0", fontWeight: "bold" }}>{formatoPrecio(p.precio)}</p>
+            <p style={{ margin: "8px 0 0", fontWeight: "bold", color: p.disponible ? "#1b7f3b" : "#b00020" }}>
+              {p.disponible ? "Disponible" : "Agotado"}
+            </p>
             <p style={{ margin: "8px 0 0", fontSize: 12, color: "#666" }}>Ver detalle →</p>
           </article>
         ))}

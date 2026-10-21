@@ -4,11 +4,11 @@ const pool = require('../db');
 
 const router = express.Router();
 
-// Catálogo público de productos disponibles 
+// Catálogo público: todos los productos con su disponibilidad (HU-014) 
 router.get("/api/catalogo", async (req, res) => {
   try {
     const { q, categoria } = req.query;
-    const condiciones = ["stock > 0"];
+        const condiciones = ["1=1"];
     const params = [];
 
     if (q) {
@@ -22,10 +22,11 @@ router.get("/api/catalogo", async (req, res) => {
 
     const sql = `
       SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
+             (COALESCE(stock, 0) > 0) AS disponible,
              creado_en AT TIME ZONE 'UTC' AS creado_en
       FROM productos
       WHERE ${condiciones.join(" AND ")}
-      ORDER BY nombre ASC
+      ORDER BY disponible DESC, nombre ASC
     `;
 
     const resultado = await pool.query(sql, params);
@@ -113,7 +114,7 @@ router.get("/api/disponibilidad/:id", async (req, res) => {
       categoria: p.categoria,
       precio: p.precio,
       disponible: disponible,
-      estado: disponible ? "Disponible" : "No disponible",
+            estado: disponible ? "Disponible" : "Agotado",
       consultado_en: new Date().toISOString(),
     });
   } catch (error) {
