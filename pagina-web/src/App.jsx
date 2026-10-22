@@ -4,6 +4,7 @@ import PiePagina from './PiePagina';
 import CatalogoProductos from './CatalogoProductos';
 import CatalogoCategorias from './CatalogoCategorias';
 import DisponibilidadProducto from './DisponibilidadProducto';
+import Inventario from './inventario/Inventario';
 
 function App() {
   const [vista, setVista] = useState('todos');
@@ -15,6 +16,7 @@ function App() {
         {vista === 'todos' && <CatalogoProductos />}
         {vista === 'categorias' && <CatalogoCategorias />}
         {vista === 'disponibilidad' && <DisponibilidadProducto />}
+        {vista === 'inventario' && <Inventario />}
       </main>
       <PiePagina />
     </div>

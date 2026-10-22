@@ -1,3 +1,7 @@
+// Mientras no exista el inicio de sesión, la opción Inventario solo se muestra
+// si el .env tiene VITE_MOSTRAR_INVENTARIO=true (en Vercel no se define).
+const MOSTRAR_INVENTARIO = import.meta.env.VITE_MOSTRAR_INVENTARIO === 'true';
+
 function Encabezado({ vista, onCambiarVista }) {
   const opcion = (id, texto) => (
     <button
@@ -26,6 +30,7 @@ function Encabezado({ vista, onCambiarVista }) {
         {opcion('todos', 'Todos los productos')}
         {opcion('categorias', 'Por categoría')}
         {opcion('disponibilidad', 'Consultar disponibilidad')}
+        {MOSTRAR_INVENTARIO && opcion('inventario', 'Inventario')}
       </nav>
     </header>
   );
