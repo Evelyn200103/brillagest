@@ -1,6 +1,6 @@
 // Mientras no exista el inicio de sesión, la opción Inventario solo se muestra
 // si el .env tiene VITE_MOSTRAR_INVENTARIO=true (en Vercel no se define).
-const MOSTRAR_INVENTARIO = import.meta.env.VITE_MOSTRAR_INVENTARIO === 'true';
+const MOSTRAR_INVENTARIO = true;
 
 function Encabezado({ vista, onCambiarVista }) {
   const opcion = (id, texto) => (
