@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { useEffect, useState } from 'react';
   import HistorialMovimientos from './HistorialMovimientos.jsx';
   import FormEntrada from './Entradalnventario';
@@ -41,7 +42,7 @@ function App() {
     if (q) params.set('q', q);
     if (categoria) params.set('categoria', categoria);
 
-    fetch(`${API_URL}/api/productos?${params.toString()}`)
+    apiFetch(`${API_URL}/api/productos?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => setProductos(data))
       .catch(() => setMensaje('No se pudo cargar la lista de productos'))
@@ -86,7 +87,7 @@ function App() {
     if (!confirmar) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/productos/${p.id}`, { method: 'DELETE' });
+      const res = await apiFetch(`${API_URL}/api/productos/${p.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Error al eliminar el producto');
@@ -113,7 +114,7 @@ function App() {
       const url = editandoId ? `${API_URL}/api/productos/${editandoId}` : `${API_URL}/api/productos`;
       const method = editandoId ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

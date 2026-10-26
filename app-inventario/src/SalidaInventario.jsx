@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -41,7 +42,7 @@ function SalidaInventario({ productos, onRegistrada }) {
 
     setEnviando(true);
     try {
-      const res = await fetch(`${API_URL}/api/movimientos/salida`, {
+      const res = await apiFetch(`${API_URL}/api/movimientos/salida`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { useEffect, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -7,7 +8,7 @@ function AlertasStock({ productos }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`${API_URL}/api/alertas/stock-bajo`)
+    apiFetch(`${API_URL}/api/alertas/stock-bajo`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();

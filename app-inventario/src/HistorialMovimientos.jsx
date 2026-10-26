@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { useEffect, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -18,7 +19,7 @@ function HistorialMovimientos() {
       if (tipo) params.set('tipo', tipo);
       if (productoId) params.set('producto_id', productoId);
 
-      const res = await fetch(`${API_URL}/api/movimientos?${params.toString()}`);
+      const res = await apiFetch(`${API_URL}/api/movimientos?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Error al consultar los movimientos');
@@ -33,7 +34,7 @@ function HistorialMovimientos() {
   };
 
   useEffect(() => {
-    fetch(`${API_URL}/api/productos`)
+    apiFetch(`${API_URL}/api/productos`)
       .then((res) => res.json())
       .then((data) => setProductos(Array.isArray(data) ? data : []))
       .catch(() => setProductos([]));

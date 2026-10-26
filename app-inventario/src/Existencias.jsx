@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { useEffect, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -23,7 +24,7 @@ function Existencias({ categorias, version }) {
     if (q) params.set('q', q);
     if (cat) params.set('categoria', cat);
 
-    fetch(`${API_URL}/api/existencias?${params.toString()}`)
+    apiFetch(`${API_URL}/api/existencias?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) {
