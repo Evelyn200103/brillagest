@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  usuario VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  rol VARCHAR(20) NOT NULL CHECK (rol IN ('administrador', 'empleado')),
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW()
+);
