@@ -6,6 +6,7 @@ const { verificarToken } = require('./auth');
 const rutasInventario = require('./rutas/inventario');
 const rutasCatalogo = require('./rutas/catalogo');
 const rutasAuth = require('./rutas/auth');
+const rutasUsuarios = require('./rutas/usuarios');
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ app.get('/api/health', async (req, res) => {
 
 app.use(rutasCatalogo);
 app.use(rutasAuth);
+app.use(rutasUsuarios);
 app.use(verificarToken, rutasInventario);
 
 const PORT = process.env.PORT || 4000;
