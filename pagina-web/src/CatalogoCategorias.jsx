@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import DetalleProducto from './DetalleProducto';
+import { formatoPrecio } from './formato';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -83,8 +84,10 @@ function CatalogoCategorias() {
                 {p.material || `${p.marca || '—'} (${p.tipo || '—'})`}
               </p>
               {p.peso && <p style={{ margin: '0.3rem 0' }}>{p.peso} g</p>}
-              <p style={{ margin: '0.3rem 0' }}>${Number(p.precio).toLocaleString('es-CO')}</p>
-              {!p.disponible && <span style={{ color: 'crimson' }}>Agotado</span>}
+              <p style={{ margin: '0.3rem 0' }}>{formatoPrecio(p.precio)}</p>
+              <p style={{ margin: '0.3rem 0', fontWeight: 'bold', color: p.disponible ? '#1b7f3b' : '#b00020' }}>
+                {p.estado}
+              </p>
               <div style={{ marginTop: '0.5rem' }}>
                 <button type="button" onClick={() => setDetalleId(p.id)}>Ver detalle →</button>
               </div>

@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import DetalleProducto from "./DetalleProducto";
+import { formatoPrecio } from "./formato";
 
 const API = import.meta.env.VITE_API_URL;
-
-function formatoPrecio(valor) {
-  const numero = Number(valor);
-  if (isNaN(numero)) return "-";
-  return numero.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
-}
 
 export default function CatalogoProductos() {
   const [productos, setProductos] = useState([]);
@@ -99,7 +94,7 @@ export default function CatalogoProductos() {
             <p style={{ margin: 0, fontSize: 13 }}>{p.material || p.marca || "-"}</p>
             <p style={{ margin: "8px 0 0", fontWeight: "bold" }}>{formatoPrecio(p.precio)}</p>
             <p style={{ margin: "8px 0 0", fontWeight: "bold", color: p.disponible ? "#1b7f3b" : "#b00020" }}>
-              {p.disponible ? "Disponible" : "Agotado"}
+              {p.estado}
             </p>
             <p style={{ margin: "8px 0 0", fontSize: 12, color: "#666" }}>Ver detalle →</p>
           </article>
