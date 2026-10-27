@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/api/catalogo', async (req, res) => {
   try {
     const { q, categoria } = req.query;
-    const condiciones = ['1=1'];
+    const condiciones = ['publicado = true']; // solo productos publicados
     const params = [];
 
     if (q) {
@@ -47,7 +47,7 @@ const CATEGORIAS_CATALOGO = [
 router.get('/api/catalogo/categorias', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT categoria, COUNT(*)::int AS total FROM productos GROUP BY categoria'
+      'SELECT categoria, COUNT(*)::int AS total FROM productos WHERE publicado = true GROUP BY categoria'
     );
     const conteo = Object.fromEntries(result.rows.map((r) => [r.categoria, r.total]));
 
@@ -73,7 +73,7 @@ router.get('/api/catalogo/categorias/:nombre/productos', async (req, res) => {
     const result = await pool.query(
       `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio, stock
        FROM productos
-       WHERE categoria = $1
+       WHERE categoria = $1 AND publicado = true
        ORDER BY nombre ASC`,
       [categoria]
     );
@@ -98,7 +98,7 @@ router.get('/api/disponibilidad/:id', async (req, res) => {
     const resultado = await pool.query(
       `SELECT id, sku, nombre, categoria, precio, stock
        FROM productos
-       WHERE id = $1`,
+       WHERE id = $1 AND publicado = true`,
       [id]
     );
 
@@ -128,7 +128,7 @@ router.get('/api/catalogo/productos/:id', async (req, res) => {
     const result = await pool.query(
       `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio, stock
        FROM productos
-       WHERE id = $1`,
+       WHERE id = $1 AND publicado = true `,
       [id]
     );
 

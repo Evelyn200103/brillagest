@@ -99,6 +99,27 @@ function App() {
     }
   };
 
+    // mostrar u ocultar un producto en la página web
+  const handlePublicar = async (p) => {
+    setMensaje('');
+    const nuevoValor = p.publicado === false; // si estaba oculto, se publica; si no, se oculta
+    try {
+      const res = await apiFetch(`${API_URL}/api/productos/${p.id}/publicado`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicado: nuevoValor })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo cambiar la publicación');
+      setMensaje(data.mensaje);
+      setProductos((lista) =>
+        lista.map((x) => (x.id === p.id ? { ...x, publicado: data.producto.publicado } : x))
+      );
+    } catch (err) {
+      setMensaje(err.message);
+    }
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
@@ -251,6 +272,7 @@ function App() {
               <th>Peso (g)</th>
               <th>Precio</th>
               <th>Stock</th>
+              <th>En la web</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -264,6 +286,17 @@ function App() {
                 <td>{p.peso ?? '—'}</td>
                 <td>${p.precio}</td>
                 <td>{p.stock}</td>
+                <td>{p.stock}</td>
+                <td>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={p.publicado !== false}
+                      onChange={() => handlePublicar(p)}
+                    />
+                    {p.publicado !== false ? 'Sí' : 'No'}
+                  </label>
+                </td>
                 <td>
                   <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
                   <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>

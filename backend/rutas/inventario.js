@@ -99,6 +99,42 @@ router.put('/api/productos/:id', requierePermiso('productos:editar'), async (req
   }
 });
 
+// Publicar u ocultar un producto en la página web (HU-015)
+router.patch('/api/productos/:id/publicado', requierePermiso('productos:editar'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { publicado } = req.body;
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Producto inválido' });
+    }
+
+    if (typeof publicado !== 'boolean') {
+      return res.status(400).json({ error: 'El campo publicado debe ser verdadero o falso' });
+    }
+
+    const result = await pool.query(
+      `UPDATE productos SET publicado = $1
+       WHERE id = $2 RETURNING id, sku, nombre, publicado`,
+      [publicado, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json({
+      mensaje: publicado
+        ? 'El producto ahora se muestra en la página web.'
+        : 'El producto ya no se muestra en la página web.',
+      producto: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error en PATCH /api/productos/:id/publicado:', err);
+    res.status(500).json({ error: 'No se pudo cambiar la publicación del producto' });
+  }
+});
+
 // Eliminar un producto
 router.delete('/api/productos/:id', requierePermiso('productos:editar'), async (req, res) => {
   try {
