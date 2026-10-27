@@ -10,7 +10,7 @@ export default function DisponibilidadProducto() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/api/productos`)
+    fetch(`${API}/api/catalogo`)
       .then((r) => r.json())
       .then((datos) => setProductos(datos))
       .catch(() => setError("No se pudo cargar la lista de productos"));

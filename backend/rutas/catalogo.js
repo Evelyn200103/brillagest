@@ -1,14 +1,15 @@
 // Rutas de la Página web pública (solo lectura)
 const express = require('express');
 const pool = require('../db');
+const { conDisponibilidad } = require('../disponibilidad'); // HU-016
 
 const router = express.Router();
 
-// Catálogo público: todos los productos con su disponibilidad (HU-014) 
-router.get("/api/catalogo", async (req, res) => {
+// Catálogo público: todos los productos con su disponibilidad (HU-014, HU-016)
+router.get('/api/catalogo', async (req, res) => {
   try {
     const { q, categoria } = req.query;
-        const condiciones = ["1=1"];
+    const condiciones = ['1=1'];
     const params = [];
 
     if (q) {
@@ -21,23 +22,21 @@ router.get("/api/catalogo", async (req, res) => {
     }
 
     const sql = `
-      SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
-             (COALESCE(stock, 0) > 0) AS disponible,
-             creado_en AT TIME ZONE 'UTC' AS creado_en
+      SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio, stock
       FROM productos
-      WHERE ${condiciones.join(" AND ")}
-      ORDER BY disponible DESC, nombre ASC
+      WHERE ${condiciones.join(' AND ')}
+      ORDER BY (COALESCE(stock, 0) > 0) DESC, nombre ASC
     `;
 
     const resultado = await pool.query(sql, params);
-    res.json(resultado.rows);
+    res.json(resultado.rows.map(conDisponibilidad));
   } catch (error) {
-    console.error("Error en GET /api/catalogo:", error);
-    res.status(500).json({ error: "Error al consultar el catálogo" });
+    console.error('Error en GET /api/catalogo:', error);
+    res.status(500).json({ error: 'Error al consultar el catálogo' });
   }
 });
 
-// Catálogo público: consultar productos por categoría 
+// Catálogo público: consultar productos por categoría
 const CATEGORIAS_CATALOGO = [
   'Anillos', 'Pulseras', 'Cadenas', 'Topos', 'Dijes',
   'Aretes largos', 'Candongas', 'Candongas con piedrería',
@@ -56,7 +55,8 @@ router.get('/api/catalogo/categorias', async (req, res) => {
       CATEGORIAS_CATALOGO.map((nombre) => ({ nombre, total: conteo[nombre] || 0 }))
     );
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error en GET /api/catalogo/categorias:', err);
+    res.status(500).json({ error: 'Error al consultar las categorías' });
   }
 });
 
@@ -71,26 +71,28 @@ router.get('/api/catalogo/categorias/:nombre/productos', async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
-              (COALESCE(stock, 0) > 0) AS disponible
+      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio, stock
        FROM productos
        WHERE categoria = $1
        ORDER BY nombre ASC`,
       [categoria]
     );
 
-    res.json({ categoria, total: result.rows.length, productos: result.rows });
+    const productos = result.rows.map(conDisponibilidad);
+    res.json({ categoria, total: productos.length, productos });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error en GET /api/catalogo/categorias/:nombre/productos:', err);
+    res.status(500).json({ error: 'Error al consultar los productos de la categoría' });
   }
 });
-// ===== HU-014: Consultar disponibilidad de productos =====
-router.get("/api/disponibilidad/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
 
-    if (isNaN(Number(id))) {
-      return res.status(400).json({ error: "El id debe ser numérico" });
+// ===== HU-014: Consultar disponibilidad de productos =====
+router.get('/api/disponibilidad/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'El identificador del producto no es válido' });
     }
 
     const resultado = await pool.query(
@@ -101,29 +103,20 @@ router.get("/api/disponibilidad/:id", async (req, res) => {
     );
 
     if (resultado.rows.length === 0) {
-      return res.status(404).json({ error: "Producto no encontrado" });
+      return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    const p = resultado.rows[0];
-    const disponible = p.stock > 0;
-
     res.json({
-      id: p.id,
-      sku: p.sku,
-      nombre: p.nombre,
-      categoria: p.categoria,
-      precio: p.precio,
-      disponible: disponible,
-            estado: disponible ? "Disponible" : "Agotado",
+      ...conDisponibilidad(resultado.rows[0]),
       consultado_en: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Error en GET /api/disponibilidad/:id", error);
-    res.status(500).json({ error: "Error al consultar la disponibilidad" });
+    console.error('Error en GET /api/disponibilidad/:id', error);
+    res.status(500).json({ error: 'Error al consultar la disponibilidad' });
   }
 });
 
-// Catálogo público: detalle de un producto 
+// Catálogo público: detalle de un producto (HU-013)
 router.get('/api/catalogo/productos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -133,8 +126,7 @@ router.get('/api/catalogo/productos/:id', async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio,
-              (COALESCE(stock, 0) > 0) AS disponible
+      `SELECT id, sku, nombre, categoria, material, marca, tipo, peso, precio, stock
        FROM productos
        WHERE id = $1`,
       [id]
@@ -146,13 +138,10 @@ router.get('/api/catalogo/productos/:id', async (req, res) => {
       });
     }
 
-    const producto = result.rows[0];
-    res.json({
-      ...producto,
-      disponibilidad: producto.disponible ? 'DISPONIBLE' : 'AGOTADO'
-    });
+    res.json(conDisponibilidad(result.rows[0]));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error en GET /api/catalogo/productos/:id:', err);
+    res.status(500).json({ error: 'Error al consultar el producto' });
   }
 });
 
