@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { apiFetch } from '../sesion';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ESTADOS = {
@@ -41,7 +43,7 @@ function Reportes({ version }) {
     setCargando(true);
     setError('');
     try {
-      const res = await fetch(`${API_URL}/api/reportes/inventario?dias=${periodo}`);
+      const res = await apiFetch(`${API_URL}/api/reportes/inventario?dias=${periodo}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'No se pudo generar el reporte');
       setDatos(data);

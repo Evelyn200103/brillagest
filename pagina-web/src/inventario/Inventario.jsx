@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
   import Reportes from './Reportes';
   import AlertasStock from './AlertasStock';
 
+import { apiFetch, tienePermiso } from '../sesion';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const CATEGORIAS = [
@@ -21,7 +23,11 @@ const FORM_VACIO = {
   peso: '', precio: '', stock: '', marca: '', tipo: 'Original'
 };
 
-function Inventario() {
+function Inventario({ usuario }) {
+  // Qué puede hacer este usuario según su rol (HU-024)
+  const puedeEditar = tienePermiso(usuario, 'productos:editar');
+  const puedeRegistrar = tienePermiso(usuario, 'movimientos:registrar');
+  const puedeVerReportes = tienePermiso(usuario, 'reportes:ver');
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState('');
@@ -41,7 +47,7 @@ function Inventario() {
     if (q) params.set('q', q);
     if (categoria) params.set('categoria', categoria);
 
-    fetch(`${API_URL}/api/productos?${params.toString()}`)
+    apiFetch(`${API_URL}/api/productos?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => setProductos(data))
       .catch(() => setMensaje('No se pudo cargar la lista de productos'))
@@ -86,7 +92,7 @@ function Inventario() {
     if (!confirmar) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/productos/${p.id}`, { method: 'DELETE' });
+      const res = await apiFetch(`${API_URL}/api/productos/${p.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Error al eliminar el producto');
@@ -113,7 +119,7 @@ function Inventario() {
       const url = editandoId ? `${API_URL}/api/productos/${editandoId}` : `${API_URL}/api/productos`;
       const method = editandoId ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -137,12 +143,14 @@ function Inventario() {
     <div>
       <h2>Gestión de inventario</h2>
         <HistorialMovimientos />
-        <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
-        <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
+        {puedeRegistrar && <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />}
+        {puedeRegistrar && <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />}
         <Existencias categorias={CATEGORIAS} version={versionExistencias} />
-        <Reportes version={versionExistencias} />
+        {puedeVerReportes && <Reportes version={versionExistencias} />}
         <AlertasStock productos={productos} />
 
+      {puedeEditar && (
+      <>
       <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
         <input
@@ -211,6 +219,8 @@ function Inventario() {
           )}
         </div>
       </form>
+      </>
+      )}
 
       {mensaje && <p>{mensaje}</p>}
 
@@ -250,7 +260,7 @@ function Inventario() {
               <th>Peso (g)</th>
               <th>Precio</th>
               <th>Stock</th>
-              <th>Acciones</th>
+              {puedeEditar && <th>Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -263,10 +273,12 @@ function Inventario() {
                 <td>{p.peso ?? '—'}</td>
                 <td>${p.precio}</td>
                 <td>{p.stock}</td>
-                <td>
-                  <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
-                  <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>
-                </td>
+                {puedeEditar && (
+                  <td>
+                    <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
+                    <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

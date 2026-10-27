@@ -2,6 +2,7 @@
 const express = require('express');
 const pool = require('../db');
 const { STOCK_MINIMO } = require('../config');
+const { requierePermiso } = require('../auth');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ async function generarSku() {
 }
 
 // Crear un producto nuevo
-router.post('/api/productos', async (req, res) => {
+router.post('/api/productos', requierePermiso('productos:editar'), async (req, res) => {
   try {
     const { nombre, categoria, material, peso, precio, stock, marca, tipo } = req.body;
 
@@ -42,7 +43,7 @@ router.post('/api/productos', async (req, res) => {
 });
 
 // Listar productos (con búsqueda y filtro opcional)
-router.get('/api/productos', async (req, res) => {
+router.get('/api/productos', requierePermiso('productos:ver'), async (req, res) => {
   try {
     const { q, categoria } = req.query;
     let sql = 'SELECT * FROM productos WHERE 1=1';
@@ -68,7 +69,7 @@ router.get('/api/productos', async (req, res) => {
 });
 
 // Actualizar un producto existente
-router.put('/api/productos/:id', async (req, res) => {
+router.put('/api/productos/:id', requierePermiso('productos:editar'), async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, categoria, material, peso, precio, stock, marca, tipo } = req.body;
@@ -99,7 +100,7 @@ router.put('/api/productos/:id', async (req, res) => {
 });
 
 // Eliminar un producto
-router.delete('/api/productos/:id', async (req, res) => {
+router.delete('/api/productos/:id', requierePermiso('productos:editar'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM productos WHERE id = $1 RETURNING *', [id]);
@@ -115,7 +116,7 @@ router.delete('/api/productos/:id', async (req, res) => {
 });
 
 // Registrar una entrada de inventario (HU-005)
-router.post('/api/movimientos/entrada', async (req, res) => {
+router.post('/api/movimientos/entrada', requierePermiso('movimientos:registrar'), async (req, res) => {
   const { producto_id, cantidad, responsable, observacion } = req.body;
 
   const productoId = Number(producto_id);
@@ -171,7 +172,7 @@ router.post('/api/movimientos/entrada', async (req, res) => {
 });
 
 // Registrar una salida de inventario (HU-006)
-router.post('/api/movimientos/salida', async (req, res) => {
+router.post('/api/movimientos/salida', requierePermiso('movimientos:registrar'), async (req, res) => {
   const { producto_id, cantidad, responsable, observacion } = req.body;
 
   const productoId = Number(producto_id);
@@ -236,7 +237,7 @@ router.post('/api/movimientos/salida', async (req, res) => {
 
 // Consultar existencias (HU-007)
 
-router.get('/api/existencias', async (req, res) => {
+router.get('/api/existencias', requierePermiso('existencias:ver'), async (req, res) => {
   try {
     const { q, categoria } = req.query;
     let sql = `SELECT id, sku, nombre, categoria, material, marca, tipo, stock
@@ -271,7 +272,7 @@ router.get('/api/existencias', async (req, res) => {
   }
 });
 // Consultar movimientos de inventario (HU-008)
-router.get('/api/movimientos', async (req, res) => {
+router.get('/api/movimientos', requierePermiso('movimientos:ver'), async (req, res) => {
   try {
     const { tipo, producto_id } = req.query;
     const condiciones = [];
@@ -316,7 +317,7 @@ router.get('/api/movimientos', async (req, res) => {
 // Alertas de stock bajo (HU-009)
 
 
-router.get('/api/alertas/stock-bajo', async (req, res) => {
+router.get('/api/alertas/stock-bajo', requierePermiso('alertas:ver'), async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, sku, nombre, categoria, COALESCE(stock, 0) AS stock
@@ -339,7 +340,7 @@ router.get('/api/alertas/stock-bajo', async (req, res) => {
 
 // Reportes básicos de inventario (HU-010)
 // Usa STOCK_MINIMO, el mismo nivel definido para las alertas (HU-009)
-router.get('/api/reportes/inventario', async (req, res) => {
+router.get('/api/reportes/inventario', requierePermiso('reportes:ver'), async (req, res) => {
   try {
     // Periodo (en días) para el resumen de movimientos. Por defecto, 30.
     const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);

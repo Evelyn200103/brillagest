@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { apiFetch } from '../sesion';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ESTADOS = {
@@ -23,7 +25,7 @@ function Existencias({ categorias, version }) {
     if (q) params.set('q', q);
     if (cat) params.set('categoria', cat);
 
-    fetch(`${API_URL}/api/existencias?${params.toString()}`)
+    apiFetch(`${API_URL}/api/existencias?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) {

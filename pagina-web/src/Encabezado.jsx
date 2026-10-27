@@ -1,8 +1,6 @@
-// Mientras no exista el inicio de sesión, la opción Inventario solo se muestra
-// si el .env tiene VITE_MOSTRAR_INVENTARIO=true (en Vercel no se define).
-const MOSTRAR_INVENTARIO = true;
+import { cerrarSesion, tienePermiso } from './sesion';
 
-function Encabezado({ vista, onCambiarVista }) {
+function Encabezado({ vista, onCambiarVista, usuario }) {
   const opcion = (id, texto) => (
     <button
       type="button"
@@ -26,11 +24,22 @@ function Encabezado({ vista, onCambiarVista }) {
     <header style={{ borderBottom: '1px solid #ddd', paddingBottom: '1rem', marginBottom: '1rem' }}>
       <h1 style={{ margin: 0 }}>Joyería Sánchez</h1>
       <p style={{ margin: '0.3rem 0 1rem', color: '#666' }}>Catálogo de joyas y relojes</p>
-      <nav style={{ display: 'flex', gap: '1.5rem' }}>
+      <nav style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {opcion('todos', 'Todos los productos')}
         {opcion('categorias', 'Por categoría')}
         {opcion('disponibilidad', 'Consultar disponibilidad')}
-        {MOSTRAR_INVENTARIO && opcion('inventario', 'Inventario')}
+        {tienePermiso(usuario, 'productos:ver') && opcion('inventario', 'Inventario')}
+        {tienePermiso(usuario, 'usuarios:gestionar') && opcion('usuarios', 'Usuarios')}
+        <span style={{ marginLeft: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          {usuario ? (
+            <>
+              <span>{usuario.nombre} ({usuario.rol})</span>
+              <button type="button" onClick={cerrarSesion}>Cerrar sesión</button>
+            </>
+          ) : (
+            opcion('login', 'Iniciar sesión')
+          )}
+        </span>
       </nav>
     </header>
   );

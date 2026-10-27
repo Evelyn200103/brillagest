@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
-const { verificarToken } = require('../auth');
+const { verificarToken, permisosDeRol } = require('../auth');
 
 const router = express.Router();
 
@@ -48,7 +48,8 @@ router.post('/api/auth/login', async (req, res) => {
         id: encontrado.id,
         usuario: encontrado.usuario,
         nombre: encontrado.nombre,
-        rol: encontrado.rol
+        rol: encontrado.rol,
+        permisos: permisosDeRol(encontrado.rol)
       }
     });
   } catch (err) {
@@ -57,7 +58,7 @@ router.post('/api/auth/login', async (req, res) => {
 });
 
 router.get('/api/auth/perfil', verificarToken, (req, res) => {
-  res.json({ usuario: req.usuario });
+  res.json({ usuario: { ...req.usuario, permisos: permisosDeRol(req.usuario.rol) } });
 });
 
 module.exports = router;
