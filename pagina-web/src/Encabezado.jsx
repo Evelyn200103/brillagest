@@ -1,6 +1,4 @@
-import { cerrarSesion, tienePermiso } from './sesion';
-
-function Encabezado({ vista, onCambiarVista, usuario }) {
+function Encabezado({ vista, onCambiarVista }) {
   const opcion = (id, texto) => (
     <button
       type="button"
@@ -28,18 +26,6 @@ function Encabezado({ vista, onCambiarVista, usuario }) {
         {opcion('todos', 'Todos los productos')}
         {opcion('categorias', 'Por categoría')}
         {opcion('disponibilidad', 'Consultar disponibilidad')}
-        {tienePermiso(usuario, 'productos:ver') && opcion('inventario', 'Inventario')}
-        {tienePermiso(usuario, 'usuarios:gestionar') && opcion('usuarios', 'Usuarios')}
-        <span style={{ marginLeft: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          {usuario ? (
-            <>
-              <span>{usuario.nombre} ({usuario.rol})</span>
-              <button type="button" onClick={cerrarSesion}>Cerrar sesión</button>
-            </>
-          ) : (
-            opcion('login', 'Iniciar sesión')
-          )}
-        </span>
       </nav>
     </header>
   );
