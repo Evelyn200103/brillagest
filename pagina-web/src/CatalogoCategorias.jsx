@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import DetalleProducto from './DetalleProducto';
-import { formatoPrecio } from './formato';
+import TarjetaProducto from './TarjetaProducto';
+import IconoCategoria from './IconoCategoria';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -46,56 +47,53 @@ function CatalogoCategorias() {
   }
 
   return (
-    <div style={{ marginBottom: '2rem' }}>
-      <h2>Catálogo por categorías</h2>
+    <section>
+      <div className="seccion-cabecera">
+        <div>
+          <p className="eyebrow">Explora por tipo de joya</p>
+          <h2>Catálogo por categorías</h2>
+        </div>
+      </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="grid-categorias">
         {categorias.map((c) => (
           <button
             key={c.nombre}
             type="button"
+            className={seleccionada === c.nombre ? 'tarjeta-categoria activo' : 'tarjeta-categoria'}
             onClick={() => elegirCategoria(c.nombre)}
-            style={{
-              fontWeight: seleccionada === c.nombre ? 'bold' : 'normal',
-              border: seleccionada === c.nombre ? '2px solid goldenrod' : '1px solid gray'
-            }}
           >
-            {c.nombre} ({c.total})
+            <IconoCategoria categoria={c.nombre} />
+            <span className="tarjeta-categoria-nombre">{c.nombre}</span>
+            <span className="chip-numero">{c.total}</span>
           </button>
         ))}
       </div>
 
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {error && <p className="mensaje mensaje-error">{error}</p>}
 
-      {!seleccionada && !error && <p>Selecciona una categoría para ver sus productos.</p>}
+      {!seleccionada && !error && (
+        <p className="mensaje">Selecciona una categoría para ver sus productos.</p>
+      )}
 
-      {seleccionada && cargando && <p>Cargando...</p>}
+      {seleccionada && (
+        <h3 className="subtitulo-seccion">{seleccionada}</h3>
+      )}
+
+      {seleccionada && cargando && <p className="mensaje">Cargando…</p>}
 
       {seleccionada && !cargando && !error && productos.length === 0 && (
-        <p>Por el momento no hay productos disponibles en la categoría "{seleccionada}".</p>
+        <p className="mensaje">Por el momento no hay productos en la categoría "{seleccionada}".</p>
       )}
 
       {!cargando && productos.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '0.8rem' }}>
+        <div className="grid-productos">
           {productos.map((p) => (
-            <div key={p.id} style={{ border: '1px solid gray', borderRadius: '6px', padding: '0.8rem' }}>
-              <strong>{p.nombre}</strong>
-              <p style={{ margin: '0.3rem 0' }}>
-                {p.material || `${p.marca || '—'} (${p.tipo || '—'})`}
-              </p>
-              {p.peso && <p style={{ margin: '0.3rem 0' }}>{p.peso} g</p>}
-              <p style={{ margin: '0.3rem 0' }}>{formatoPrecio(p.precio)}</p>
-              <p style={{ margin: '0.3rem 0', fontWeight: 'bold', color: p.disponible ? '#1b7f3b' : '#b00020' }}>
-                {p.estado}
-              </p>
-              <div style={{ marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setDetalleId(p.id)}>Ver detalle →</button>
-              </div>
-            </div>
+            <TarjetaProducto key={p.id} producto={p} onVer={(prod) => setDetalleId(prod.id)} />
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

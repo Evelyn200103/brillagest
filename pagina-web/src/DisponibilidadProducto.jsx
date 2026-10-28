@@ -1,96 +1,106 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import IconoCategoria from './IconoCategoria';
 
 const API = import.meta.env.VITE_API_URL;
 
 export default function DisponibilidadProducto() {
   const [productos, setProductos] = useState([]);
-  const [idSeleccionado, setIdSeleccionado] = useState("");
+  const [idSeleccionado, setIdSeleccionado] = useState('');
   const [resultado, setResultado] = useState(null);
   const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch(`${API}/api/catalogo`)
       .then((r) => r.json())
       .then((datos) => setProductos(datos))
-      .catch(() => setError("No se pudo cargar la lista de productos"));
+      .catch(() => setError('No se pudo cargar la lista de productos'));
   }, []);
 
-  const consultar = async () => {
+  const consultar = async (e) => {
+    e?.preventDefault();
     if (!idSeleccionado) {
-      setError("Selecciona un producto");
+      setError('Selecciona un producto');
       setResultado(null);
       return;
     }
     setCargando(true);
-    setError("");
+    setError('');
     setResultado(null);
     try {
       const respuesta = await fetch(`${API}/api/disponibilidad/${idSeleccionado}`);
       const datos = await respuesta.json();
-      if (!respuesta.ok) throw new Error(datos.error || "Error al consultar");
+      if (!respuesta.ok) throw new Error(datos.error || 'Error al consultar');
       setResultado(datos);
-    } catch (e) {
-      setError(e.message);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <section style={{ marginTop: 24 }}>
-      <h2>Consultar disponibilidad</h2>
-
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-        <select
-          value={idSeleccionado}
-          onChange={(e) => setIdSeleccionado(e.target.value)}
-        >
-          <option value="">Selecciona un producto</option>
-          {productos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nombre} ({p.sku})
-            </option>
-          ))}
-        </select>
-        <button onClick={consultar} disabled={cargando}>
-          {cargando ? "Consultando..." : "Consultar disponibilidad"}
-        </button>
-        {resultado && (
-          <button onClick={consultar} disabled={cargando}>
-            Actualizar
-          </button>
-        )}
+    <section className="disponibilidad">
+      <div className="seccion-cabecera">
+        <div>
+          <p className="eyebrow">Stock en vivo</p>
+          <h2>Consultar disponibilidad</h2>
+          <p className="texto-suave" style={{ margin: 0 }}>
+            Elige una joya y te decimos al instante si está disponible en la tienda.
+          </p>
+        </div>
       </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form className="panel" onSubmit={consultar}>
+        <div className="campo">
+          <label htmlFor="producto-consulta">Producto</label>
+          <select
+            id="producto-consulta"
+            value={idSeleccionado}
+            onChange={(e) => setIdSeleccionado(e.target.value)}
+          >
+            <option value="">Selecciona un producto</option>
+            {productos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre} ({p.sku})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="hero-botones" style={{ justifyContent: 'flex-start' }}>
+          <button type="submit" className="btn btn-dorado" disabled={cargando}>
+            {cargando ? 'Consultando…' : 'Consultar disponibilidad'}
+          </button>
+          {resultado && (
+            <button type="button" className="btn btn-borde" onClick={consultar} disabled={cargando}>
+              Actualizar
+            </button>
+          )}
+        </div>
+      </form>
+
+      {error && <p className="mensaje mensaje-error" style={{ marginTop: '1rem' }}>{error}</p>}
 
       {resultado && (
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            padding: 16,
-            maxWidth: 360,
-          }}
-        >
-          <h3 style={{ margin: "0 0 8px" }}>{resultado.nombre}</h3>
-          <p style={{ margin: 0, fontSize: 13 }}>SKU: {resultado.sku}</p>
-          <p style={{ margin: 0, fontSize: 13 }}>
-            Categoría: {resultado.categoria || "-"}
-          </p>
-          <p
-            style={{
-              margin: "12px 0 0",
-              fontWeight: "bold",
-              color: resultado.disponible ? "green" : "red",
-            }}
-          >
-            {resultado.estado}
-          </p>
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#666" }}>
-            Consultado: {new Date(resultado.consultado_en).toLocaleString("es-CO")}
-          </p>
+        <div className="panel resultado-disponibilidad">
+          <div className="resultado-icono">
+            <IconoCategoria categoria={resultado.categoria} />
+          </div>
+          <div>
+            <span className="tarjeta-meta">
+              {resultado.categoria || '—'} · Ref. {resultado.sku}
+            </span>
+            <h3 className="tarjeta-nombre">{resultado.nombre}</h3>
+            <span
+              className={resultado.disponible ? 'estado estado-disponible' : 'estado estado-agotado'}
+              style={{ marginTop: '0.5rem' }}
+            >
+              {resultado.estado}
+            </span>
+            <p className="texto-suave" style={{ fontSize: '0.75rem', margin: '0.6rem 0 0' }}>
+              Consultado: {new Date(resultado.consultado_en).toLocaleString('es-CO')}
+            </p>
+          </div>
         </div>
       )}
     </section>

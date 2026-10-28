@@ -1,27 +1,20 @@
 import { useEffect, useState } from 'react';
+import IconoCategoria from './IconoCategoria';
+import { formatoPrecio } from './formato';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const formatoPrecio = (valor) => {
-  const numero = Number(valor);
-  if (isNaN(numero)) return '—';
-  return numero.toLocaleString('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0
-  });
-};
-
 const DISPONIBILIDAD = {
-  DISPONIBLE: { texto: 'Disponible', color: '#1b7f3b' },
-  AGOTADO: { texto: 'Agotado por el momento', color: '#b00020' }
+  DISPONIBLE: { texto: 'Disponible', clase: 'estado estado-disponible' },
+  AGOTADO: { texto: 'Agotado por el momento', clase: 'estado estado-agotado' }
 };
 
 function Dato({ etiqueta, valor }) {
   return (
-    <p style={{ margin: '0.4rem 0' }}>
-      <b>{etiqueta}:</b> {valor}
-    </p>
+    <div className="dato">
+      <dt>{etiqueta}</dt>
+      <dd>{valor}</dd>
+    </div>
   );
 }
 
@@ -29,6 +22,11 @@ function DetalleProducto({ id, onVolver }) {
   const [producto, setProducto] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+
+  // Al abrir el detalle, la página sube hasta el producto
+  useEffect(() => {
+    document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+  }, [id]);
 
   useEffect(() => {
     let activo = true;
@@ -67,34 +65,44 @@ function DetalleProducto({ id, onVolver }) {
   const esReloj = producto?.categoria === 'Relojes';
 
   return (
-    <section style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, marginTop: 24 }}>
-      <button type="button" onClick={onVolver}>← Volver al catálogo</button>
+    <section>
+      <button type="button" className="btn-texto" onClick={onVolver}>
+        ← Volver al catálogo
+      </button>
 
-      {cargando && <p>Cargando detalle del producto...</p>}
+      {cargando && <p className="mensaje">Cargando detalle del producto…</p>}
 
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {error && <p className="mensaje mensaje-error">{error}</p>}
 
       {producto && (
-        <>
-          <h2>{producto.nombre}</h2>
+        <div className="detalle">
+          <div className={producto.disponible ? 'detalle-imagen' : 'detalle-imagen agotada'}>
+            <IconoCategoria categoria={producto.categoria} />
+          </div>
 
-          <p style={{ fontWeight: 'bold', color: estado?.color }}>
-            {estado?.texto || producto.disponibilidad}
-          </p>
+          <div className="detalle-info">
+            <p className="eyebrow">{producto.categoria || 'Joyería'}</p>
+            <h2 className="detalle-nombre">{producto.nombre}</h2>
+            <span className={estado?.clase || 'estado'}>
+              {estado?.texto || producto.disponibilidad}
+            </span>
 
-          <Dato etiqueta="Categoría" valor={producto.categoria || '—'} />
-          {esReloj ? (
-            <>
-              <Dato etiqueta="Marca" valor={producto.marca || '—'} />
-              <Dato etiqueta="Tipo" valor={producto.tipo || '—'} />
-            </>
-          ) : (
-            <Dato etiqueta="Material" valor={producto.material || '—'} />
-          )}
-          <Dato etiqueta="Peso" valor={producto.peso ? `${producto.peso} g` : '—'} />
-          <Dato etiqueta="Precio" valor={formatoPrecio(producto.precio)} />
-          <Dato etiqueta="Referencia (SKU)" valor={producto.sku} />
-        </>
+            <p className="detalle-precio">{formatoPrecio(producto.precio)}</p>
+
+            <dl className="datos">
+              {esReloj ? (
+                <>
+                  <Dato etiqueta="Marca" valor={producto.marca || '—'} />
+                  <Dato etiqueta="Tipo" valor={producto.tipo || '—'} />
+                </>
+              ) : (
+                <Dato etiqueta="Material" valor={producto.material || '—'} />
+              )}
+              <Dato etiqueta="Peso" valor={producto.peso ? `${producto.peso} g` : '—'} />
+              <Dato etiqueta="Referencia" valor={producto.sku} />
+            </dl>
+          </div>
+        </div>
       )}
     </section>
   );

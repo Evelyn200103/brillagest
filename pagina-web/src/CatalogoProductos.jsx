@@ -1,30 +1,39 @@
-import { useEffect, useState } from "react";
-import DetalleProducto from "./DetalleProducto";
-import { formatoPrecio } from "./formato";
+import { useEffect, useState } from 'react';
+import DetalleProducto from './DetalleProducto';
+import TarjetaProducto from './TarjetaProducto';
 
 const API = import.meta.env.VITE_API_URL;
 
 export default function CatalogoProductos() {
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
-  const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState("");
+  const [error, setError] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [categoria, setCategoria] = useState('');
   const [seleccionado, setSeleccionado] = useState(null);
 
-  const cargarCatalogo = async () => {
+  const cargarCatalogo = async (q = busqueda, cat = categoria) => {
     setCargando(true);
-    setError("");
+    setError('');
     try {
       const params = new URLSearchParams();
-      if (busqueda) params.append("q", busqueda);
-      if (categoria) params.append("categoria", categoria);
+      if (q) params.append('q', q);
+      if (cat) params.append('categoria', cat);
       const respuesta = await fetch(`${API}/api/catalogo?${params.toString()}`);
-      if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo");
+      if (!respuesta.ok) throw new Error('No se pudo cargar el catálogo');
       const datos = await respuesta.json();
       setProductos(datos);
+      // Las categorías de los chips se toman de la primera carga (sin filtros)
+      if (!q && !cat) {
+        setCategorias([...new Set(datos.map((p) => p.categoria).filter(Boolean))]);
+      }
     } catch (e) {
-      setError(e.message);
+      setError(
+        e instanceof TypeError
+          ? 'No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.'
+          : e.message
+      );
       setProductos([]);
     } finally {
       setCargando(false);
@@ -32,74 +41,87 @@ export default function CatalogoProductos() {
   };
 
   useEffect(() => {
-    cargarCatalogo();
+    cargarCatalogo('', '');
   }, []);
 
-  const categorias = [...new Set(productos.map((p) => p.categoria).filter(Boolean))];
+  const elegirCategoria = (cat) => {
+    setCategoria(cat);
+    cargarCatalogo(busqueda, cat);
+  };
+
+  const buscar = (e) => {
+    e.preventDefault();
+    cargarCatalogo();
+  };
+
+  const limpiar = () => {
+    setBusqueda('');
+    setCategoria('');
+    cargarCatalogo('', '');
+  };
 
   if (seleccionado) {
     return <DetalleProducto id={seleccionado.id} onVolver={() => setSeleccionado(null)} />;
   }
 
   return (
-    <section style={{ marginTop: 24 }}>
-      <h2>Catálogo de productos</h2>
+    <section>
+      <div className="seccion-cabecera">
+        <div>
+          <p className="eyebrow">Diseños Joyería Sánchez</p>
+          <h2>Catálogo de productos</h2>
+        </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-        <input
-          placeholder="Buscar por nombre o SKU"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-          <option value="">Todas las categorías</option>
-          {categorias.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <button onClick={cargarCatalogo}>Buscar</button>
-        <button
-          onClick={() => {
-            setBusqueda("");
-            setCategoria("");
-            setTimeout(cargarCatalogo, 0);
-          }}
-        >
-          Limpiar
-        </button>
+        <form className="buscador" onSubmit={buscar} role="search">
+          <input
+            type="search"
+            placeholder="Buscar por nombre o referencia"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            aria-label="Buscar producto"
+          />
+          <button type="submit" className="btn btn-dorado">Buscar</button>
+          {(busqueda || categoria) && (
+            <button type="button" className="btn btn-borde" onClick={limpiar}>Limpiar</button>
+          )}
+        </form>
       </div>
 
-      {cargando && <p>Cargando catálogo...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {!cargando && !error && productos.length === 0 && (
-        <p>No hay productos en el catálogo.</p>
+      {categorias.length > 0 && (
+        <div className="chips" style={{ marginBottom: '1.5rem' }}>
+          <button
+            type="button"
+            className={categoria === '' ? 'chip activo' : 'chip'}
+            onClick={() => elegirCategoria('')}
+          >
+            Todo
+          </button>
+          {categorias.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={categoria === c ? 'chip activo' : 'chip'}
+              onClick={() => elegirCategoria(c)}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-        {productos.map((p) => (
-          <article
-            key={p.id}
-            onClick={() => setSeleccionado(p)}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 8,
-              padding: 12,
-              width: 220,
-              cursor: "pointer",
-              textAlign: "left",
-            }}
-          >
-            <h3 style={{ margin: "0 0 8px" }}>{p.nombre}</h3>
-            <p style={{ margin: 0, fontSize: 13 }}>{p.categoria || "-"}</p>
-            <p style={{ margin: 0, fontSize: 13 }}>{p.material || p.marca || "-"}</p>
-            <p style={{ margin: "8px 0 0", fontWeight: "bold" }}>{formatoPrecio(p.precio)}</p>
-            <p style={{ margin: "8px 0 0", fontWeight: "bold", color: p.disponible ? "#1b7f3b" : "#b00020" }}>
-              {p.estado}
-            </p>
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "#666" }}>Ver detalle →</p>
-          </article>
-        ))}
-      </div>
+      {cargando && <p className="mensaje">Cargando catálogo…</p>}
+      {error && <p className="mensaje mensaje-error">{error}</p>}
+      {!cargando && !error && productos.length === 0 && (
+        <p className="mensaje">No encontramos productos con esa búsqueda.</p>
+      )}
+
+      {!cargando && productos.length > 0 && (
+        <div className="grid-productos">
+          {productos.map((p) => (
+            <TarjetaProducto key={p.id} producto={p} onVer={setSeleccionado} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,32 +1,38 @@
-function Encabezado({ vista, onCambiarVista }) {
-  const opcion = (id, texto) => (
-    <button
-      type="button"
-      onClick={() => onCambiarVista(id)}
-      style={{
-        background: 'none',
-        border: 'none',
-        borderBottom: vista === id ? '2px solid goldenrod' : '2px solid transparent',
-        fontWeight: vista === id ? 'bold' : 'normal',
-        fontSize: '1rem',
-        cursor: 'pointer',
-        padding: '0.3rem 0',
-        color: 'inherit'
-      }}
-    >
-      {texto}
-    </button>
-  );
+import BotonTema from './BotonTema';
 
+const OPCIONES = [
+  { id: 'todos', texto: 'Todos los productos' },
+  { id: 'categorias', texto: 'Por categoría' },
+  { id: 'disponibilidad', texto: 'Consultar disponibilidad' }
+];
+
+function Encabezado({ vista, onCambiarVista }) {
   return (
-    <header style={{ borderBottom: '1px solid #ddd', paddingBottom: '1rem', marginBottom: '1rem' }}>
-      <h1 style={{ margin: 0 }}>Joyería Sánchez</h1>
-      <p style={{ margin: '0.3rem 0 1rem', color: '#666' }}>Catálogo de joyas y relojes</p>
-      <nav style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        {opcion('todos', 'Todos los productos')}
-        {opcion('categorias', 'Por categoría')}
-        {opcion('disponibilidad', 'Consultar disponibilidad')}
-      </nav>
+    <header className="encabezado">
+      <div className="contenedor encabezado-fila">
+        <button type="button" className="marca" onClick={() => onCambiarVista('todos')}>
+          <span className="marca-logo" aria-hidden="true" />
+          <span>
+            <span className="marca-nombre">Joyería Sánchez</span>
+            <span className="marca-sub">Joyas &amp; relojes · Bogotá</span>
+          </span>
+        </button>
+
+        <nav className="nav" aria-label="Secciones del catálogo">
+          {OPCIONES.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              className={vista === o.id ? 'nav-boton activo' : 'nav-boton'}
+              onClick={() => onCambiarVista(o.id)}
+            >
+              {o.texto}
+            </button>
+          ))}
+        </nav>
+
+        <BotonTema />
+      </div>
     </header>
   );
 }
