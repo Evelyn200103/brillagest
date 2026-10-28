@@ -1,4 +1,4 @@
-import { apiFetch } from './api';
+import { apiFetch, tienePermiso } from './api';
 import { useEffect, useState } from 'react';
   import HistorialMovimientos from './HistorialMovimientos.jsx';
   import FormEntrada from './Entradalnventario';
@@ -22,7 +22,15 @@ const FORM_VACIO = {
   peso: '', precio: '', stock: '', marca: '', tipo: 'Original'
 };
 
-function App() {
+function App({ usuario }) {
+  // Qué puede hacer este usuario según su rol (HU-024)
+  const puedeEditar = tienePermiso(usuario, 'productos:editar');
+  const puedeRegistrar = tienePermiso(usuario, 'movimientos:registrar');
+  const puedeVerMovimientos = tienePermiso(usuario, 'movimientos:ver');
+  const puedeVerExistencias = tienePermiso(usuario, 'existencias:ver');
+  const puedeVerReportes = tienePermiso(usuario, 'reportes:ver');
+  const puedeVerAlertas = tienePermiso(usuario, 'alertas:ver');
+
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState('');
@@ -44,14 +52,14 @@ function App() {
 
     apiFetch(`${API_URL}/api/productos?${params.toString()}`)
       .then((res) => res.json())
-      .then((data) => setProductos(data))
+      .then((data) => setProductos(Array.isArray(data) ? data : []))
       .catch(() => setMensaje('No se pudo cargar la lista de productos'))
       .finally(() => setCargando(false));
   };
 
   const alRegistrarMovimiento = () => {
-  cargarProductos();
-  setVersionExistencias((v) => v + 1);
+    cargarProductos();
+    setVersionExistencias((v) => v + 1);
   };
 
   useEffect(() => {
@@ -82,7 +90,7 @@ function App() {
     setForm(FORM_VACIO);
   };
 
-    const handleEliminar = async (p) => {
+  const handleEliminar = async (p) => {
     const confirmar = window.confirm(`¿Seguro que quieres eliminar "${p.nombre}" (${p.sku})? Esta acción no se puede deshacer.`);
     if (!confirmar) return;
 
@@ -99,7 +107,7 @@ function App() {
     }
   };
 
-    // mostrar u ocultar un producto en la página web
+  // Mostrar u ocultar un producto en la página web (HU-015)
   const handlePublicar = async (p) => {
     setMensaje('');
     const nuevoValor = p.publicado === false; // si estaba oculto, se publica; si no, se oculta
@@ -119,7 +127,7 @@ function App() {
       setMensaje(err.message);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje('');
@@ -158,81 +166,85 @@ function App() {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h1>BrillaGest — Inventario</h1>
-        <HistorialMovimientos />
-        <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />
-        <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />
-        <Existencias categorias={CATEGORIAS} version={versionExistencias} />
-        <Reportes version={versionExistencias} />
-        <AlertasStock productos={productos} />
+      {puedeVerMovimientos && <HistorialMovimientos />}
+      {puedeRegistrar && <FormEntrada productos={productos} onRegistrada={alRegistrarMovimiento} />}
+      {puedeRegistrar && <FormSalida productos={productos} onRegistrada={alRegistrarMovimiento} />}
+      {puedeVerExistencias && <Existencias categorias={CATEGORIAS} version={versionExistencias} />}
+      {puedeVerReportes && <Reportes version={versionExistencias} />}
+      {puedeVerAlertas && <AlertasStock productos={productos} />}
 
-      <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
-        <input
-          name="nombre"
-          placeholder="Nombre del producto"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-        />
-
-        <select name="categoria" value={form.categoria} onChange={handleChange}>
-          {CATEGORIAS.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-
-        {esReloj ? (
-          <>
+      {puedeEditar && (
+        <>
+          <h2>{editandoId ? 'Editar producto' : 'Registrar producto'}</h2>
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
             <input
-              name="marca"
-              placeholder="Marca (ej. Casio)"
-              value={form.marca}
+              name="nombre"
+              placeholder="Nombre del producto"
+              value={form.nombre}
+              onChange={handleChange}
+              required
+            />
+
+            <select name="categoria" value={form.categoria} onChange={handleChange}>
+              {CATEGORIAS.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+
+            {esReloj ? (
+              <>
+                <input
+                  name="marca"
+                  placeholder="Marca (ej. Casio)"
+                  value={form.marca}
+                  onChange={handleChange}
+                />
+                <select name="tipo" value={form.tipo} onChange={handleChange}>
+                  <option>Original</option>
+                  <option>Réplica</option>
+                </select>
+              </>
+            ) : (
+              <select name="material" value={form.material} onChange={handleChange}>
+                {MATERIALES.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
+              </select>
+            )}
+
+            <input
+              name="peso"
+              type="number"
+              step="0.1"
+              placeholder="Peso (gramos, opcional)"
+              value={form.peso}
               onChange={handleChange}
             />
-            <select name="tipo" value={form.tipo} onChange={handleChange}>
-              <option>Original</option>
-              <option>Réplica</option>
-            </select>
-          </>
-        ) : (
-          <select name="material" value={form.material} onChange={handleChange}>
-            {MATERIALES.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        )}
+            <input
+              name="precio"
+              type="number"
+              placeholder="Precio"
+              value={form.precio}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="stock"
+              type="number"
+              placeholder="Stock inicial"
+              value={form.stock}
+              onChange={handleChange}
+            />
 
-        <input
-          name="peso"
-          type="number"
-          step="0.1"
-          placeholder="Peso (gramos, opcional)"
-          value={form.peso}
-          onChange={handleChange}
-        />
-        <input
-          name="precio"
-          type="number"
-          placeholder="Precio"
-          value={form.precio}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="stock"
-          type="number"
-          placeholder="Stock inicial"
-          value={form.stock}
-          onChange={handleChange}
-        />
-
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button type="submit">{editandoId ? 'Actualizar producto' : 'Guardar producto'}</button>
-          {editandoId && (
-            <button type="button" onClick={cancelarEdicion}>Cancelar edición</button>
-          )}
-        </div>
-      </form>
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <button type="submit">{editandoId ? 'Actualizar producto' : 'Guardar producto'}</button>
+              {editandoId && (
+                <button type="button" onClick={cancelarEdicion}>Cancelar edición</button>
+              )}
+            </div>
+          </form>
+        </>
+      )}
 
       {mensaje && <p>{mensaje}</p>}
 
@@ -273,7 +285,7 @@ function App() {
               <th>Precio</th>
               <th>Stock</th>
               <th>En la web</th>
-              <th>Acciones</th>
+              {puedeEditar && <th>Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -286,21 +298,23 @@ function App() {
                 <td>{p.peso ?? '—'}</td>
                 <td>${p.precio}</td>
                 <td>{p.stock}</td>
-                <td>{p.stock}</td>
                 <td>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', cursor: puedeEditar ? 'pointer' : 'default' }}>
                     <input
                       type="checkbox"
                       checked={p.publicado !== false}
                       onChange={() => handlePublicar(p)}
+                      disabled={!puedeEditar}
                     />
                     {p.publicado !== false ? 'Sí' : 'No'}
                   </label>
                 </td>
-                <td>
-                  <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
-                  <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>
-                </td>
+                {puedeEditar && (
+                  <td>
+                    <button type="button" onClick={() => handleEditar(p)}>Editar</button>{' '}
+                    <button type="button" onClick={() => handleEliminar(p)}>Eliminar</button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

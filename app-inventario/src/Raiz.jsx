@@ -1,20 +1,52 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import App from './App.jsx';
 import Login from './Login.jsx';
 import Usuarios from './Usuarios.jsx';
-import { obtenerUsuario, cerrarSesion } from './api';
+import AccesoDenegado from './AccesoDenegado.jsx';
+import { obtenerUsuario, cerrarSesion, refrescarPerfil, tienePermiso } from './api';
 
 function Raiz() {
   const [usuario, setUsuario] = useState(obtenerUsuario());
   const [vista, setVista] = useState('inventario');
+  const [aviso, setAviso] = useState('');
+
+  // Trae del backend los permisos actualizados del usuario (HU-024)
+  const actualizarPerfil = async () => {
+    try {
+      await refrescarPerfil();
+      setUsuario(obtenerUsuario());
+    } catch {
+      // Si falla, se queda con los datos que ya estaban guardados
+    }
+  };
+
+  useEffect(() => {
+    if (obtenerUsuario()) actualizarPerfil();
+  }, []);
+
+  // Si el backend responde 403, api.js avisa con este evento
+  useEffect(() => {
+    const alDenegar = (e) => {
+      setAviso(e.detail || 'No tiene permiso para realizar esta acción.');
+      setTimeout(() => setAviso(''), 5000);
+    };
+    window.addEventListener('acceso-denegado', alDenegar);
+    return () => window.removeEventListener('acceso-denegado', alDenegar);
+  }, []);
+
+  const alEntrar = (u) => {
+    setUsuario(u);
+    actualizarPerfil();
+  };
 
   if (!usuario) {
-    return <Login onEntrar={setUsuario} />;
+    return <Login onEntrar={alEntrar} />;
   }
 
-  const esAdmin = usuario.rol === 'administrador';
-  // Solo el administrador puede llegar a la vista de usuarios.
-  const vistaActual = esAdmin ? vista : 'inventario';
+  const puedeVerInventario = tienePermiso(usuario, 'productos:ver');
+  const puedeGestionarUsuarios = tienePermiso(usuario, 'usuarios:gestionar');
+  // Solo quien tenga el permiso puede llegar a la vista de usuarios.
+  const vistaActual = puedeGestionarUsuarios ? vista : 'inventario';
 
   return (
     <>
@@ -29,7 +61,7 @@ function Raiz() {
           borderBottom: '1px solid #ddd'
         }}
       >
-        {esAdmin && (
+        {puedeGestionarUsuarios && (
           <button
             type="button"
             onClick={() => setVista(vistaActual === 'usuarios' ? 'inventario' : 'usuarios')}
@@ -41,7 +73,26 @@ function Raiz() {
         <button type="button" onClick={cerrarSesion}>Cerrar sesión</button>
       </div>
 
-      {vistaActual === 'usuarios' ? <Usuarios /> : <App />}
+      {aviso && (
+        <div
+          role="alert"
+          style={{
+            fontFamily: 'sans-serif',
+            background: '#fdecea',
+            color: '#b00020',
+            padding: '0.6rem 1rem',
+            borderBottom: '1px solid #f5c2c0'
+          }}
+        >
+          {aviso}
+        </div>
+      )}
+
+      {vistaActual === 'usuarios'
+        ? <Usuarios />
+        : puedeVerInventario
+          ? <App usuario={usuario} />
+          : <div style={{ fontFamily: 'sans-serif', padding: '2rem' }}><AccesoDenegado /></div>}
     </>
   );
 }
