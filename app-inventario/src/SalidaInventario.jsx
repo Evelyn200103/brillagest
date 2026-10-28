@@ -1,5 +1,6 @@
 import { apiFetch } from './api';
 import { useState } from 'react';
+import { IconoSalida } from './Iconos';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -39,7 +40,6 @@ function SalidaInventario({ productos, onRegistrada }) {
       mostrarError(`Stock insuficiente. Disponible: ${stockDisponible}.`);
       return;
     }
-
     setEnviando(true);
     try {
       const res = await apiFetch(`${API_URL}/api/movimientos/salida`, {
@@ -74,10 +74,15 @@ function SalidaInventario({ productos, onRegistrada }) {
   };
 
   return (
-    <div style={{ marginBottom: '1.5rem' }}>
-      <h2>Registrar salida de inventario</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem' }}>
-        <select value={productoId} onChange={(e) => setProductoId(e.target.value)}>
+    <form className="panel formulario" onSubmit={handleSubmit}>
+      <h2 className="panel-titulo panel-titulo-icono">
+        <span className="icono-redondo icono-salida"><IconoSalida /></span>
+        Registrar salida
+      </h2>
+
+      <div className="campo">
+        <label htmlFor="salida-producto">Producto</label>
+        <select id="salida-producto" value={productoId} onChange={(e) => setProductoId(e.target.value)}>
           <option value="">Selecciona un producto</option>
           {productos.map((p) => (
             <option key={p.id} value={p.id}>
@@ -85,8 +90,12 @@ function SalidaInventario({ productos, onRegistrada }) {
             </option>
           ))}
         </select>
+      </div>
 
+      <div className="campo">
+        <label htmlFor="salida-cantidad">Cantidad</label>
         <input
+          id="salida-cantidad"
           type="number"
           min="1"
           step="1"
@@ -94,28 +103,28 @@ function SalidaInventario({ productos, onRegistrada }) {
           value={cantidad}
           onChange={(e) => setCantidad(e.target.value)}
         />
+      </div>
 
-        <input
-          placeholder="Responsable (opcional)"
-          value={responsable}
-          onChange={(e) => setResponsable(e.target.value)}
-        />
+      <div className="campo">
+        <label htmlFor="salida-responsable">Responsable (opcional)</label>
+        <input id="salida-responsable" value={responsable} onChange={(e) => setResponsable(e.target.value)} />
+      </div>
 
-        <input
-          placeholder="Observación (opcional)"
-          value={observacion}
-          onChange={(e) => setObservacion(e.target.value)}
-        />
+      <div className="campo">
+        <label htmlFor="salida-observacion">Observación (opcional)</label>
+        <input id="salida-observacion" value={observacion} onChange={(e) => setObservacion(e.target.value)} />
+      </div>
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Registrando...' : 'Registrar salida'}
-        </button>
-      </form>
+      <button type="submit" className="btn btn-dorado" disabled={enviando}>
+        {enviando ? 'Registrando…' : 'Registrar salida'}
+      </button>
 
       {mensaje && (
-        <p style={{ color: esError ? 'crimson' : 'green' }}>{mensaje}</p>
+        <p className={esError ? 'mensaje mensaje-error' : 'mensaje mensaje-exito'} style={{ marginTop: '1rem' }}>
+          {mensaje}
+        </p>
       )}
-    </div>
+    </form>
   );
 }
 

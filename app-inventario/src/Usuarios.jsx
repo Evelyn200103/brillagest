@@ -1,5 +1,8 @@
 import { apiFetch, obtenerUsuario } from './api';
 import { useEffect, useState } from 'react';
+import CabeceraPagina from './CabeceraPagina';
+import { iniciales } from './formato';
+import { IconoEditar, IconoUsuarios } from './Iconos';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -148,93 +151,122 @@ function Usuarios() {
   };
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
-      <h1>BrillaGest — Usuarios</h1>
+    <>
+      <CabeceraPagina titulo="Usuarios" Icono={IconoUsuarios} />
 
-      <h2>{editandoId ? 'Editar usuario' : 'Registrar usuario'}</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.6rem', marginBottom: '1.5rem' }}>
-        <input
-          name="usuario"
-          placeholder="Usuario"
-          value={form.usuario}
-          onChange={handleChange}
-          disabled={Boolean(editandoId)}
-        />
-        <input
-          name="nombre"
-          placeholder="Nombre completo"
-          value={form.nombre}
-          onChange={handleChange}
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder={editandoId ? 'Dejar vacío para no cambiarla' : 'Contraseña (mínimo 8 caracteres)'}
-          value={form.password}
-          onChange={handleChange}
-        />
-        <select name="rol" value={form.rol} onChange={handleChange}>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
+      <div className="usuarios-grid">
+        <form className="panel formulario" onSubmit={handleSubmit}>
+          <h2 className="panel-titulo">{editandoId ? 'Editar usuario' : 'Registrar usuario'}</h2>
 
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button type="submit">{editandoId ? 'Actualizar usuario' : 'Guardar usuario'}</button>
-          {editandoId && (
-            <button type="button" onClick={cancelarEdicion}>Cancelar edición</button>
+          <div className="campo">
+            <label htmlFor="u-usuario">Usuario</label>
+            <input
+              id="u-usuario"
+              name="usuario"
+              value={form.usuario}
+              onChange={handleChange}
+              disabled={Boolean(editandoId)}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="u-nombre">Nombre completo</label>
+            <input id="u-nombre" name="nombre" value={form.nombre} onChange={handleChange} />
+          </div>
+          <div className="campo">
+            <label htmlFor="u-password">Contraseña</label>
+            <input
+              id="u-password"
+              name="password"
+              type="password"
+              placeholder={editandoId ? 'Dejar vacío para no cambiarla' : 'Mínimo 8 caracteres'}
+              value={form.password}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="u-rol">Rol</label>
+            <select id="u-rol" name="rol" value={form.rol} onChange={handleChange}>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="formulario-botones">
+            <button type="submit" className="btn btn-dorado">
+              {editandoId ? 'Actualizar usuario' : 'Guardar usuario'}
+            </button>
+            {editandoId && (
+              <button type="button" className="btn btn-borde" onClick={cancelarEdicion}>Cancelar</button>
+            )}
+          </div>
+
+          {error && <p className="mensaje mensaje-error" style={{ marginTop: '1rem' }}>{error}</p>}
+          {mensaje && <p className="mensaje mensaje-exito" style={{ marginTop: '1rem' }}>{mensaje}</p>}
+        </form>
+
+        <div className="bloque">
+          <h2 className="panel-titulo">Usuarios registrados</h2>
+
+          {cargando ? (
+            <p className="mensaje">Cargando usuarios…</p>
+          ) : usuarios.length === 0 ? (
+            <p className="mensaje">No hay usuarios registrados.</p>
+          ) : (
+            <div className="tabla-contenedor">
+              <table className="tabla">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th aria-label="Acciones" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {usuarios.map((u) => {
+                    const esSesionActual = sesion && u.id === sesion.id;
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <div className="celda-usuario">
+                            <span className="avatar">{iniciales(u.nombre)}</span>
+                            <span>
+                              <span className="celda-producto">{u.nombre}</span>
+                              <span className="celda-codigo" style={{ display: 'block' }}>{u.usuario}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td><span className="pastilla">{u.rol}</span></td>
+                        <td>
+                          <span className={u.activo ? 'estado estado-disponible' : 'estado estado-inactivo'}>
+                            {u.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                        <td className="celda-acciones">
+                          {esSesionActual ? (
+                            <span className="texto-suave" style={{ fontSize: '0.75rem' }}>Tu sesión</span>
+                          ) : (
+                            <>
+                              <button type="button" className="btn-icono" onClick={() => handleEditar(u)} title="Editar" aria-label={`Editar ${u.nombre}`}>
+                                <IconoEditar />
+                              </button>
+                              <button type="button" className="btn btn-borde btn-chico" onClick={() => handleCambiarEstado(u)}>
+                                {u.activo ? 'Desactivar' : 'Activar'}
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </form>
-
-      {error && <p style={{ color: '#b00020' }}>{error}</p>}
-      {mensaje && <p>{mensaje}</p>}
-
-      <h2>Usuarios registrados</h2>
-
-      {cargando ? (
-        <p>Cargando usuarios...</p>
-      ) : usuarios.length === 0 ? (
-        <p>No hay usuarios registrados.</p>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Nombre</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((u) => {
-              const esSesionActual = sesion && u.id === sesion.id;
-              return (
-                <tr key={u.id}>
-                  <td>{u.usuario}</td>
-                  <td>{u.nombre}</td>
-                  <td>{u.rol}</td>
-                  <td>{u.activo ? 'Activo' : 'Inactivo'}</td>
-                  <td>
-                    {esSesionActual ? (
-                      <span>—</span>
-                    ) : (
-                      <>
-                        <button type="button" onClick={() => handleEditar(u)}>Editar</button>{' '}
-                        <button type="button" onClick={() => handleCambiarEstado(u)}>
-                          {u.activo ? 'Desactivar' : 'Activar'}
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 

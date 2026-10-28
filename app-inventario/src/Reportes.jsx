@@ -1,33 +1,26 @@
 import { apiFetch } from './api';
 import { useEffect, useState } from 'react';
+import { formatoPrecio } from './formato';
+import IconoCategoria from './IconoCategoria';
+import { IconoInventario, IconoAlertas, IconoValor, IconoJoya, IconoEliminar } from './Iconos';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ESTADOS = {
-  STOCK_BAJO: { texto: 'Stock bajo', color: '#b26a00' },
-  AGOTADO: { texto: 'Agotado', color: '#b00020' }
+  STOCK_BAJO: { texto: 'Stock bajo', clase: 'estado estado-bajo' },
+  AGOTADO: { texto: 'Agotado', clase: 'estado estado-agotado' }
 };
 
-const formatoMoneda = (valor) =>
-  Number(valor || 0).toLocaleString('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0
-  });
-
-function Tarjeta({ titulo, valor }) {
+function Kpi({ titulo, valor, tono, Icono }) {
   return (
-    <div
-      style={{
-        flex: '1 1 150px',
-        border: '1px solid #888',
-        borderRadius: '6px',
-        padding: '10px',
-        textAlign: 'center'
-      }}
-    >
-      <div style={{ fontSize: '0.85rem' }}>{titulo}</div>
-      <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{valor}</div>
+    <div className="kpi">
+      {Icono && (
+        <span className={tono ? `kpi-icono ${tono}` : 'kpi-icono'} aria-hidden="true">
+          <Icono tamano={20} />
+        </span>
+      )}
+      <p className="kpi-titulo">{titulo}</p>
+      <p className={tono ? `kpi-valor ${tono}` : 'kpi-valor'}>{valor}</p>
     </div>
   );
 }
@@ -58,26 +51,28 @@ function Reportes({ version }) {
     cargar(dias);
   }, [version, dias]);
 
-  return (
-    <div style={{ marginTop: '30px' }}>
-      <h2>Reportes de inventario</h2>
+  const maxUnidades = datos?.por_categoria?.length
+    ? Math.max(...datos.por_categoria.map((c) => Number(c.unidades) || 0), 1)
+    : 1;
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-        <select value={dias} onChange={(e) => setDias(Number(e.target.value))}>
+  return (
+    <section className="bloque">
+      <div className="filtros" style={{ marginBottom: '1.2rem' }}>
+        <select value={dias} onChange={(e) => setDias(Number(e.target.value))} aria-label="Periodo">
           <option value={7}>Movimientos de los últimos 7 días</option>
           <option value={30}>Movimientos de los últimos 30 días</option>
           <option value={90}>Movimientos de los últimos 90 días</option>
         </select>
-        <button type="button" onClick={() => cargar(dias)}>
+        <button type="button" className="btn btn-borde" onClick={() => cargar(dias)}>
           Actualizar reporte
         </button>
       </div>
 
-      {error && <p style={{ color: '#b00020' }}>{error}</p>}
-      {cargando && <p>Generando reporte...</p>}
+      {error && <p className="mensaje mensaje-error">{error}</p>}
+      {cargando && <p className="mensaje">Generando reporte…</p>}
 
       {!cargando && datos && !datos.hay_informacion && (
-        <p>
+        <p className="mensaje">
           No hay información suficiente para generar los reportes: todavía no hay
           productos registrados en el inventario.
         </p>
@@ -85,105 +80,132 @@ function Reportes({ version }) {
 
       {!cargando && datos && datos.hay_informacion && (
         <>
-          <p style={{ fontSize: '0.85rem' }}>
-            Generado el {new Date(datos.generado_en).toLocaleString('es-CO')}
-          </p>
-
-          <h3>Resumen general</h3>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-            <Tarjeta titulo="Productos registrados" valor={datos.resumen.total_productos} />
-            <Tarjeta titulo="Unidades en existencia" valor={datos.resumen.total_unidades} />
-            <Tarjeta titulo="Valor del inventario" valor={formatoMoneda(datos.resumen.valor_inventario)} />
-            <Tarjeta titulo="Con stock bajo" valor={datos.resumen.stock_bajo} />
-            <Tarjeta titulo="Agotados" valor={datos.resumen.agotados} />
+          <div className="kpis kpis-5">
+            <Kpi titulo="Productos registrados" valor={datos.resumen.total_productos} Icono={IconoJoya} />
+            <Kpi titulo="Unidades en existencia" valor={datos.resumen.total_unidades} tono="verde" Icono={IconoInventario} />
+            <Kpi titulo="Valor del inventario" valor={formatoPrecio(datos.resumen.valor_inventario)} Icono={IconoValor} />
+            <Kpi titulo="Con stock bajo" valor={datos.resumen.stock_bajo} tono="dorado" Icono={IconoAlertas} />
+            <Kpi titulo="Agotados" valor={datos.resumen.agotados} tono="rojo" Icono={IconoEliminar} />
           </div>
-          <p style={{ fontSize: '0.8rem' }}>
-            El valor del inventario es el precio de cada producto por sus existencias.
-            Se considera stock bajo cuando hay {datos.stock_minimo} unidades o menos.
+          <p className="nota">
+            Generado el {new Date(datos.generado_en).toLocaleString('es-CO')}. El valor del inventario es el
+            precio de cada producto por sus existencias. Se considera stock bajo cuando hay{' '}
+            {datos.stock_minimo} unidades o menos.
           </p>
 
-          <h3>Inventario por categoría</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Categoría</th>
-                <th>Productos</th>
-                <th>Unidades</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {datos.por_categoria.map((c) => (
-                <tr key={c.categoria}>
-                  <td>{c.categoria}</td>
-                  <td>{c.productos}</td>
-                  <td>{c.unidades}</td>
-                  <td>{formatoMoneda(c.valor)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <h3>Movimientos de los últimos {datos.movimientos.dias} días</h3>
-          {datos.movimientos.total === 0 ? (
-            <p>No hay movimientos registrados en este periodo.</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Movimientos</th>
-                  <th>Unidades</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Entradas</td>
-                  <td>{datos.movimientos.entradas.movimientos}</td>
-                  <td>{datos.movimientos.entradas.unidades}</td>
-                </tr>
-                <tr>
-                  <td>Salidas</td>
-                  <td>{datos.movimientos.salidas.movimientos}</td>
-                  <td>{datos.movimientos.salidas.unidades}</td>
-                </tr>
-              </tbody>
-            </table>
-          )}
-
-          <h3>Productos por reponer</h3>
-          {datos.productos_a_reponer.length === 0 ? (
-            <p>Ningún producto está en el nivel mínimo o por debajo.</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>SKU</th>
-                  <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Existencias</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datos.productos_a_reponer.map((p) => {
-                  const estado = ESTADOS[p.estado] || ESTADOS.STOCK_BAJO;
-                  return (
-                    <tr key={p.id}>
-                      <td>{p.sku}</td>
-                      <td>{p.nombre}</td>
-                      <td>{p.categoria}</td>
-                      <td>{p.stock}</td>
-                      <td style={{ color: estado.color, fontWeight: 'bold' }}>{estado.texto}</td>
+          <div className="dos-columnas">
+            <div className="bloque">
+              <h2 className="panel-titulo">Inventario por categoría</h2>
+              <div className="tabla-contenedor">
+                <table className="tabla">
+                  <thead>
+                    <tr>
+                      <th>Categoría</th>
+                      <th>Productos</th>
+                      <th>Unidades</th>
+                      <th>Valor</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+                  </thead>
+                  <tbody>
+                    {datos.por_categoria.map((c) => (
+                      <tr key={c.categoria}>
+                        <td>
+                          <div className="celda-con-dibujo">
+                            <span className="miniatura" aria-hidden="true">
+                              <IconoCategoria categoria={c.categoria} />
+                            </span>
+                            {c.categoria}
+                          </div>
+                        </td>
+                        <td className="celda-numero">{c.productos}</td>
+                        <td>
+                          <div className="barra">
+                            <span
+                              className="barra-relleno"
+                              style={{ width: `${((Number(c.unidades) || 0) / maxUnidades) * 100}%` }}
+                            />
+                            <span className="celda-numero">{c.unidades}</span>
+                          </div>
+                        </td>
+                        <td className="celda-numero">{formatoPrecio(c.valor)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bloque">
+              <h2 className="panel-titulo">Movimientos de los últimos {datos.movimientos.dias} días</h2>
+              {datos.movimientos.total === 0 ? (
+                <p className="mensaje">No hay movimientos registrados en este periodo.</p>
+              ) : (
+                <div className="kpis kpis-2">
+                  <div className="kpi">
+                    <p className="kpi-titulo">Entradas</p>
+                    <p className="kpi-valor verde">+{datos.movimientos.entradas.unidades}</p>
+                    <p className="kpi-nota">
+                      {datos.movimientos.entradas.movimientos}{' '}
+                      {datos.movimientos.entradas.movimientos === 1 ? 'movimiento' : 'movimientos'}
+                    </p>
+                  </div>
+                  <div className="kpi">
+                    <p className="kpi-titulo">Salidas</p>
+                    <p className="kpi-valor rojo">−{datos.movimientos.salidas.unidades}</p>
+                    <p className="kpi-nota">
+                      {datos.movimientos.salidas.movimientos}{' '}
+                      {datos.movimientos.salidas.movimientos === 1 ? 'movimiento' : 'movimientos'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bloque">
+            <h2 className="panel-titulo">Productos por reponer</h2>
+            {datos.productos_a_reponer.length === 0 ? (
+              <p className="mensaje mensaje-exito">Ningún producto está en el nivel mínimo o por debajo.</p>
+            ) : (
+              <div className="tabla-contenedor">
+                <table className="tabla">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>Nombre</th>
+                      <th>Categoría</th>
+                      <th>Existencias</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {datos.productos_a_reponer.map((p) => {
+                      const estado = ESTADOS[p.estado] || ESTADOS.STOCK_BAJO;
+                      return (
+                        <tr key={p.id}>
+                          <td className="celda-codigo">{p.sku}</td>
+                          <td>
+                            <div className="celda-con-dibujo">
+                              <span className="miniatura" aria-hidden="true">
+                                <IconoCategoria categoria={p.categoria} />
+                              </span>
+                              <span className="celda-producto">{p.nombre}</span>
+                            </div>
+                          </td>
+                          <td>{p.categoria}</td>
+                          <td className="celda-numero">{p.stock}</td>
+                          <td><span className={estado.clase}>{estado.texto}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       )}
-    </div>
+    </section>
   );
 }
 

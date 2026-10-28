@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function HistorialMovimientos() {
+function HistorialMovimientos({ version = 0 }) {
   const [movimientos, setMovimientos] = useState([]);
   const [productos, setProductos] = useState([]);
   const [tipo, setTipo] = useState('');
@@ -40,9 +40,10 @@ function HistorialMovimientos() {
       .catch(() => setProductos([]));
   }, []);
 
+  // Se recarga al cambiar los filtros y después de cada entrada o salida
   useEffect(() => {
     cargarMovimientos();
-  }, [tipo, productoId]);
+  }, [tipo, productoId, version]);
 
   const formatearFecha = (valor) =>
     new Date(valor).toLocaleString('es-CO', {
@@ -51,67 +52,70 @@ function HistorialMovimientos() {
     });
 
   return (
-    <div style={{ marginBottom: '1.5rem' }}>
-      <h2>Historial de movimientos</h2>
+    <section className="bloque">
+      <div className="bloque-cabecera">
+        <h2 className="panel-titulo">Historial de movimientos</h2>
+        <div className="filtros">
+          <select value={tipo} onChange={(e) => setTipo(e.target.value)} aria-label="Tipo de movimiento">
+            <option value="">Entradas y salidas</option>
+            <option value="ENTRADA">Solo entradas</option>
+            <option value="SALIDA">Solo salidas</option>
+          </select>
 
-      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
-        <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
-          <option value="">Entradas y salidas</option>
-          <option value="ENTRADA">Solo entradas</option>
-          <option value="SALIDA">Solo salidas</option>
-        </select>
+          <select value={productoId} onChange={(e) => setProductoId(e.target.value)} aria-label="Producto">
+            <option value="">Todos los productos</option>
+            {productos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.sku} — {p.nombre}
+              </option>
+            ))}
+          </select>
 
-        <select
-          value={productoId}
-          onChange={(e) => setProductoId(e.target.value)}
-          style={{ flex: 1 }}
-        >
-          <option value="">Todos los productos</option>
-          {productos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.sku} — {p.nombre}
-            </option>
-          ))}
-        </select>
-
-        <button type="button" onClick={cargarMovimientos}>Actualizar</button>
+          <button type="button" className="btn btn-borde" onClick={cargarMovimientos}>Actualizar</button>
+        </div>
       </div>
 
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {error && <p className="mensaje mensaje-error">{error}</p>}
 
       {cargando ? (
-        <p>Cargando...</p>
+        <p className="mensaje">Cargando…</p>
       ) : movimientos.length === 0 && !error ? (
-        <p>No hay registros disponibles.</p>
+        <p className="mensaje">No hay registros disponibles.</p>
       ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Producto</th>
-              <th>Tipo</th>
-              <th>Cantidad</th>
-              <th>Responsable</th>
-              <th>Observación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movimientos.map((m) => (
-              <tr key={m.id}>
-                <td>{formatearFecha(m.creado_en)}</td>
-                <td>{m.sku} — {m.producto}</td>
-                <td style={{ color: m.tipo === 'ENTRADA' ? 'green' : 'crimson' }}>
-                  {m.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}
-                </td>
-                <td>{m.cantidad}</td>
-                <td>{m.responsable || '—'}</td>
-                <td>{m.observacion || '—'}</td>
+        <div className="tabla-contenedor">
+          <table className="tabla">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Responsable</th>
+                <th>Observación</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {movimientos.map((m) => (
+                <tr key={m.id}>
+                  <td className="celda-numero">{formatearFecha(m.creado_en)}</td>
+                  <td>
+                    <span className="celda-codigo">{m.sku}</span> {m.producto}
+                  </td>
+                  <td>
+                    <span className={m.tipo === 'ENTRADA' ? 'estado estado-disponible' : 'estado estado-agotado'}>
+                      {m.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}
+                    </span>
+                  </td>
+                  <td className="celda-numero">{m.tipo === 'ENTRADA' ? '+' : '−'}{m.cantidad}</td>
+                  <td>{m.responsable || '—'}</td>
+                  <td className="texto-suave">{m.observacion || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
