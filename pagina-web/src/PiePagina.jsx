@@ -1,3 +1,5 @@
+import LogoJoyeria from './LogoJoyeria';
+
 const WHATSAPP = '573202736866'; // 57 = Colombia + 320 273 6866
 
 function PiePagina() {
@@ -7,10 +9,7 @@ function PiePagina() {
     <footer className="pie">
       <div className="contenedor pie-columnas">
         <div>
-          <div className="marca pie-marca">
-            <span className="marca-logo" aria-hidden="true" />
-            <span className="marca-nombre">Joyería Sánchez</span>
-          </div>
+          <LogoJoyeria className="pie-logo" />
           <p className="texto-suave">Calle 16 Sur # 18-43, Bogotá</p>
         </div>
 

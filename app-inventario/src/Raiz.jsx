@@ -101,8 +101,10 @@ function Raiz() {
     <div className="app">
       <aside className="lateral">
         <div className="lateral-marca">
-          <span className="marca-logo" aria-hidden="true" />
-          <span className="marca-nombre">BrillaGest</span>
+          <span>
+            <span className="marca-nombre">BrillaGest</span>
+            <span className="marca-sub">Joyería Sánchez</span>
+          </span>
         </div>
 
         <nav className="lateral-menu" aria-label="Menú principal">

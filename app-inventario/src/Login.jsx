@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { guardarSesion } from './api';
 import BotonTema from './BotonTema';
+import LogoJoyeria from './LogoJoyeria';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -51,7 +52,8 @@ function Login({ onEntrar }) {
     <div className="login">
       <section className="login-portada">
         <div className="login-marca">
-          <span className="login-sello">BG</span>
+          <LogoJoyeria className="login-logo" />
+          <span className="login-marca-separador" aria-hidden="true" />
           <span>
             <span className="marca-sub">Sistema de gestión</span>
             <span className="marca-nombre">BRILLAGEST</span>
@@ -95,8 +97,10 @@ function Login({ onEntrar }) {
 
         <form className="panel login-tarjeta" onSubmit={handleSubmit}>
           <div className="lateral-marca" style={{ padding: 0, marginBottom: '1.4rem' }}>
-            <span className="marca-logo" aria-hidden="true" />
-            <span className="marca-nombre">BrillaGest</span>
+            <span>
+              <span className="marca-nombre">BrillaGest</span>
+              <span className="marca-sub">Joyería Sánchez</span>
+            </span>
           </div>
 
           <h2 className="login-bienvenida">Bienvenido de nuevo</h2>

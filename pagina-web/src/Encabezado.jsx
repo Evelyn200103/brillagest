@@ -1,4 +1,5 @@
 import BotonTema from './BotonTema';
+import LogoJoyeria from './LogoJoyeria';
 
 const OPCIONES = [
   { id: 'todos', texto: 'Todos los productos' },
@@ -11,9 +12,8 @@ function Encabezado({ vista, onCambiarVista }) {
     <header className="encabezado">
       <div className="contenedor encabezado-fila">
         <button type="button" className="marca" onClick={() => onCambiarVista('todos')}>
-          <span className="marca-logo" aria-hidden="true" />
           <span>
-            <span className="marca-nombre">Joyería Sánchez</span>
+            <LogoJoyeria variante="nombre" className="marca-nombre-logo" titulo="Joyería Sánchez" />
             <span className="marca-sub">Joyas &amp; relojes · Bogotá</span>
           </span>
         </button>
