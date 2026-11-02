@@ -7,6 +7,10 @@ const { verificarToken, permisosDeRol } = require('../auth');
 
 const router = express.Router();
 
+// Hash de relleno: si el usuario no existe igual se hace una comparación bcrypt,
+// para que responder tarde o temprano no delate qué usuarios existen.
+const HASH_RELLENO = bcrypt.hashSync('relleno-no-es-una-clave-real', 10);
+
 router.post('/api/auth/login', async (req, res) => {
   const { usuario, password } = req.body;
 
@@ -21,6 +25,7 @@ router.post('/api/auth/login', async (req, res) => {
     );
 
     if (resultado.rows.length === 0) {
+      await bcrypt.compare(password, HASH_RELLENO);
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
     }
 

@@ -3,6 +3,14 @@
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// HU-025: en producción la API debe usar https://, para que la contraseña viaje cifrada.
+// En el computador de desarrollo (localhost) se permite http://.
+export function conexionSegura() {
+  const url = import.meta.env.VITE_API_URL || '';
+  const esLocal = url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1');
+  return !import.meta.env.PROD || esLocal || url.startsWith('https://');
+}
+
 export function guardarSesion(token, usuario) {
   localStorage.setItem('token', token);
   localStorage.setItem('usuario', JSON.stringify(usuario));

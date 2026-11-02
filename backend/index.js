@@ -7,9 +7,13 @@ const rutasInventario = require('./rutas/inventario');
 const rutasCatalogo = require('./rutas/catalogo');
 const rutasAuth = require('./rutas/auth');
 const rutasUsuarios = require('./rutas/usuarios');
+const { exigirHttps, cabecerasSeguras, opcionesCors } = require('./seguridad');
 
 const app = express();
-app.use(cors());
+app.set('trust proxy', 1); // Render es un proxy: así Express sabe si el cliente usó https
+app.use(exigirHttps);
+app.use(cabecerasSeguras);
+app.use(cors(opcionesCors()));
 app.use(express.json());
 
 app.get('/api/health', async (req, res) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { guardarSesion } from './api';
+import { conexionSegura, guardarSesion } from './api';
 import BotonTema from './BotonTema';
 import LogoJoyeria from './LogoJoyeria';
 
@@ -17,6 +17,11 @@ function Login({ onEntrar }) {
 
     if (!usuario.trim() || !password) {
       setError('Ingrese el usuario y la contraseña.');
+      return;
+    }
+
+    if (!conexionSegura()) {
+      setError('La conexión con el servidor no es segura (falta HTTPS). Por seguridad no se envió la contraseña.');
       return;
     }
 
