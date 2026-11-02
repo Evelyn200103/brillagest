@@ -1,13 +1,13 @@
 # Pruebas de la HU-025 — Proteger la información de autenticación
 
-- Fecha de ejecución: 1/11/2026, 9:08:53 p. m.
-- Backend probado: `http://localhost:4000`
-- Resumen: 28 pruebas, 28 pasan, 0 fallan, 1 omitidas.
+- Fecha de ejecución: 1/11/2026, 9:17:39 p. m.
+- Backend probado: `https://brillagest.onrender.com`
+- Resumen: 31 pruebas, 31 pasan, 0 fallan, 1 omitidas.
 
 | Prueba | Criterio | Descripción | Resultado | Detalle |
 | --- | --- | --- | --- | --- |
 | A1 | Criterio 1 | La tabla usuarios solo tiene la columna password_hash (ninguna columna de contraseña en texto plano) | PASA | columnas: id, usuario, nombre, password_hash, rol, activo, creado_en |
-| A2 | Criterio 2 | Los 6 usuarios guardan un hash bcrypt válido (empieza con $2b$ y mide 60 caracteres) | PASA |  |
+| A2 | Criterio 2 | Los 8 usuarios guardan un hash bcrypt válido (empieza con $2b$ y mide 60 caracteres) | PASA |  |
 | A3 | Criterio 2 | Todos los hashes usan un costo bcrypt de 10 o más | PASA | costo mínimo: 10 |
 | A4 | Criterio 1 | El hash guardado es distinto de la contraseña escrita | PASA |  |
 | A5 | Criterio 2 | Dos usuarios con la misma contraseña tienen hashes distintos (cada hash lleva su propia sal) | PASA |  |
@@ -29,9 +29,12 @@
 | D8 | Criterio 4 | Token alterado a mano para "hacerse" administrador | PASA | HTTP 401 |
 | D9 | Criterio 4 | Token firmado con otra llave | PASA | HTTP 401 |
 | D10 | Criterio 4 | Token sin firma (alg "none") | PASA | HTTP 401 |
-| D11 | Criterio 4 | Token vencido | PASA | HTTP 401 |
+| D11 | Criterio 4 | Token vencido | OMITIDA | omitida: solo se prueba contra el backend local |
 | D12 | Pruebas | Acceso a un recurso sin permisos (empleado pide la lista de usuarios) | PASA | HTTP 403 |
 | D13 | Criterio 4 | El catálogo público sigue abierto sin token | PASA | HTTP 200 |
 | E1 | Criterio 3 | La respuesta incluye X-Content-Type-Options: nosniff | PASA |  |
 | E2 | Criterio 3 | Las respuestas del login no se guardan en caché (Cache-Control: no-store) | PASA |  |
-| E3 | Criterio 3 | Regla de HTTPS / HSTS / certificado | OMITIDA | omitida: use API=https://... o SIMULAR_PROXY=true |
+| E3 | Criterio 3 | La respuesta del servidor incluye Strict-Transport-Security (HSTS) | PASA | max-age=31536000; includeSubDomains |
+| E4 | Infraestructura | Certificado SSL/TLS de brillagest.onrender.com válido y confiable | PASA | vence Dec 20 23:04:28 2026 GMT |
+| E5 | Infraestructura | El certificado no vence en los próximos 15 días | PASA | 48 días restantes |
+| E6 | Criterio 3 | Entrar por http:// redirige a https:// | PASA | HTTP 302 |
