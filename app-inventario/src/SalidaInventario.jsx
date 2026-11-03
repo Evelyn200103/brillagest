@@ -7,7 +7,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 function SalidaInventario({ productos, onRegistrada }) {
   const [productoId, setProductoId] = useState('');
   const [cantidad, setCantidad] = useState('');
-  const [responsable, setResponsable] = useState('');
   const [observacion, setObservacion] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [esError, setEsError] = useState(false);
@@ -48,7 +47,6 @@ function SalidaInventario({ productos, onRegistrada }) {
         body: JSON.stringify({
           producto_id: Number(productoId),
           cantidad: cant,
-          responsable,
           observacion
         })
       });
@@ -63,7 +61,6 @@ function SalidaInventario({ productos, onRegistrada }) {
       );
       setProductoId('');
       setCantidad('');
-      setResponsable('');
       setObservacion('');
       if (onRegistrada) onRegistrada();
     } catch (err) {
@@ -103,11 +100,6 @@ function SalidaInventario({ productos, onRegistrada }) {
           value={cantidad}
           onChange={(e) => setCantidad(e.target.value)}
         />
-      </div>
-
-      <div className="campo">
-        <label htmlFor="salida-responsable">Responsable (opcional)</label>
-        <input id="salida-responsable" value={responsable} onChange={(e) => setResponsable(e.target.value)} />
       </div>
 
       <div className="campo">

@@ -1,9 +1,9 @@
 # Resultados de las pruebas automáticas de la HU-017
 
-- Fecha de ejecución: 27/10/2026, 5:38:34 p. m.
+- Fecha de ejecución: 3/11/2026, 5:37:45 p. m.
 - API probada: http://localhost:4000
 - Resumen: 30 pruebas: 30 pasan, 0 fallan.
-- Limpieza: El producto de prueba (id 11) no se pudo eliminar porque tiene movimientos; quedó oculto de la página web.
+- Limpieza: El producto de prueba (id 12) no se pudo eliminar porque tiene movimientos; quedó oculto de la página web.
 
 | ID | Prueba | Esperado | Obtenido | Resultado |
 | --- | --- | --- | --- | --- |

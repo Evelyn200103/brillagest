@@ -153,7 +153,9 @@ router.delete('/api/productos/:id', requierePermiso('productos:editar'), async (
 
 // Registrar una entrada de inventario (HU-005)
 router.post('/api/movimientos/entrada', requierePermiso('movimientos:registrar'), async (req, res) => {
-  const { producto_id, cantidad, responsable, observacion } = req.body;
+  const { producto_id, cantidad, observacion } = req.body;
+  // El usuario se toma automáticamente del token
+  const usuarioId = req.usuario ? req.usuario.id : null;
 
   const productoId = Number(producto_id);
   const cant = Number(cantidad);
@@ -181,9 +183,9 @@ router.post('/api/movimientos/entrada', requierePermiso('movimientos:registrar')
     }
 
     const movimiento = await client.query(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad, responsable, observacion)
+      `INSERT INTO movimientos (producto_id, tipo, cantidad, usuario_id, observacion)
        VALUES ($1, 'ENTRADA', $2, $3, $4) RETURNING *`,
-      [productoId, cant, responsable || null, observacion || null]
+      [productoId, cant, usuarioId, observacion || null]
     );
 
     const actualizado = await client.query(
@@ -209,7 +211,9 @@ router.post('/api/movimientos/entrada', requierePermiso('movimientos:registrar')
 
 // Registrar una salida de inventario (HU-006)
 router.post('/api/movimientos/salida', requierePermiso('movimientos:registrar'), async (req, res) => {
-  const { producto_id, cantidad, responsable, observacion } = req.body;
+  const { producto_id, cantidad, observacion } = req.body;
+  // El usuario se toma automáticamente del token
+  const usuarioId = req.usuario ? req.usuario.id : null;
 
   const productoId = Number(producto_id);
   const cant = Number(cantidad);
@@ -245,9 +249,9 @@ router.post('/api/movimientos/salida', requierePermiso('movimientos:registrar'),
     }
 
     const movimiento = await client.query(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad, responsable, observacion)
+      `INSERT INTO movimientos (producto_id, tipo, cantidad, usuario_id, observacion)
        VALUES ($1, 'SALIDA', $2, $3, $4) RETURNING *`,
-      [productoId, cant, responsable || null, observacion || null]
+      [productoId, cant, usuarioId, observacion || null]
     );
 
     const actualizado = await client.query(
@@ -336,9 +340,13 @@ router.get('/api/movimientos', requierePermiso('movimientos:ver'), async (req, r
 
     const result = await pool.query(
       `SELECT m.id, m.producto_id, p.sku, p.nombre AS producto, m.tipo, m.cantidad,
-              m.creado_en AT TIME ZONE 'UTC' AS creado_en, m.responsable, m.observacion
+              m.creado_en AT TIME ZONE 'UTC' AS creado_en,
+              m.usuario_id,
+              COALESCE(u.nombre, m.responsable) AS responsable,
+              m.observacion
        FROM movimientos m
        JOIN productos p ON p.id = m.producto_id
+       LEFT JOIN usuarios u ON u.id = m.usuario_id
        ${where}
        ORDER BY m.creado_en DESC, m.id DESC`,
       params
