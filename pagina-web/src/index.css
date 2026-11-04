@@ -6,22 +6,22 @@
 
 /* ---------- Colores: modo claro ---------- */
 :root {
-  --fondo: #f8f6f0;
-  --fondo-alterno: #f1ede3;
+  --fondo: #fbf7ef;
+  --fondo-alterno: #f4ead6;
   --superficie: #ffffff;
-  --borde: #e6e0d2;
-  --texto: #1d2420;
-  --texto-suave: #6d736e;
-  --verde: #1b5e3b;
-  --verde-texto: #2e7d4f;
-  --verde-suave: #e3efe7;
-  --dorado: #b8862f;
-  --dorado-claro: #d9b363;
-  --dorado-texto: #9a6f22;
+  --borde: #e9dcc0;
+  --texto: #14231b;
+  --texto-suave: #5f6b63;
+  --verde: #0f4d33;
+  --verde-texto: #17744a;
+  --verde-suave: #e2f0e7;
+  --dorado: #b07d2a;
+  --dorado-claro: #e2bf72;
+  --dorado-texto: #94681c;
   --rojo: #b3403a;
   --rojo-suave: #f7e3e0;
-  --sombra: 0 1px 2px rgba(29, 36, 32, 0.06), 0 6px 18px rgba(29, 36, 32, 0.05);
-  --brillo-hero: rgba(184, 134, 47, 0.10);
+  --sombra: 0 2px 4px rgba(20, 35, 27, 0.05), 0 12px 30px rgba(20, 35, 27, 0.08);
+  --brillo-hero: rgba(212, 170, 90, 0.30);
 
   --letra-titulo: 'Cormorant Garamond', Georgia, serif;
   --letra-texto: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -911,4 +911,536 @@ button.tarjeta:focus-visible,
   width: auto;
   color: var(--texto);
   margin-bottom: 0.25rem;
+}
+
+/* Colores extra para las bandas verdes (sirven en claro y en oscuro) */
+:root {
+  --esmeralda: #0f3d2a;
+  --esmeralda-claro: #1b6a47;
+  --crema: #f7efdd;
+}
+
+:root[data-tema='oscuro'] {
+  --esmeralda: #0e2a1d;
+  --esmeralda-claro: #1a5539;
+  --crema: #ece7dc;
+}
+
+/* ---------- Menú: la rayita dorada crece desde el centro ---------- */
+.nav-boton {
+  position: relative;
+  border-bottom-color: transparent !important;
+}
+
+.nav-boton::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--dorado), var(--dorado-claro));
+  transform: scaleX(0);
+  transition: transform 0.35s ease;
+}
+
+.nav-boton:hover::after,
+.nav-boton.activo::after {
+  transform: scaleX(1);
+}
+
+/* ---------- Botones con destello ---------- */
+.btn-dorado {
+  background: linear-gradient(110deg, var(--dorado) 0%, var(--dorado-claro) 45%, var(--dorado) 90%);
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  transition: background-position 0.6s ease, transform 0.15s, box-shadow 0.3s;
+}
+
+.btn-dorado:hover {
+  background-position: 0 0;
+  box-shadow: 0 8px 22px rgba(176, 125, 42, 0.35);
+  filter: none;
+}
+
+.btn-claro {
+  background: transparent;
+  border: 1px solid var(--dorado-claro);
+  color: var(--crema);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-claro:hover {
+  background: var(--dorado-claro);
+  color: #1a1408;
+}
+
+/* ---------- Franja de datos en verde esmeralda ---------- */
+.franja {
+  background: linear-gradient(90deg, var(--esmeralda), var(--esmeralda-claro), var(--esmeralda));
+  border-bottom: none;
+}
+
+.franja-fila {
+  padding-top: 1.4rem;
+  padding-bottom: 1.4rem;
+}
+
+.franja strong {
+  color: var(--dorado-claro);
+  font-size: 0.95rem;
+}
+
+.franja span {
+  color: rgba(247, 239, 221, 0.75);
+}
+
+/* ---------- Títulos de sección con adorno dorado ---------- */
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 26px;
+  height: 1px;
+  margin-right: 0.6rem;
+  vertical-align: middle;
+  background: var(--dorado);
+}
+
+/* ---------- Tarjetas: zoom en la joya y destello dorado ---------- */
+.tarjeta,
+.tarjeta-categoria {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.3s, box-shadow 0.35s;
+}
+
+.tarjeta:hover,
+.tarjeta-categoria:hover {
+  transform: translateY(-6px);
+  border-color: var(--dorado);
+  box-shadow: 0 18px 40px rgba(20, 35, 27, 0.14);
+}
+
+.tarjeta::after,
+.tarjeta-categoria::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 236, 190, 0.55), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.tarjeta:hover::after,
+.tarjeta-categoria:hover::after {
+  animation: destello-pasa 0.9s ease;
+}
+
+.tarjeta-imagen svg,
+.tarjeta-categoria svg {
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.tarjeta:hover .tarjeta-imagen svg,
+.tarjeta-categoria:hover svg {
+  transform: scale(1.15) rotate(-4deg);
+}
+
+.tarjeta-imagen {
+  height: 170px;
+}
+
+@keyframes destello-pasa {
+  from { left: -80%; }
+  to { left: 130%; }
+}
+
+/* ---------- Pie de página con línea dorada ---------- */
+.pie {
+  position: relative;
+  border-top: none;
+}
+
+.pie::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--esmeralda), var(--dorado-claro), var(--esmeralda));
+}
+
+/* ---------- Cinta superior que se desliza ---------- */
+.cinta {
+  overflow: hidden;
+  background: var(--esmeralda);
+  color: var(--crema);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cinta-pista {
+  display: flex;
+  width: max-content;
+  animation: cinta-mover 38s linear infinite;
+}
+
+.cinta:hover .cinta-pista {
+  animation-play-state: paused;
+}
+
+.cinta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.55rem 2.2rem 0.55rem 0;
+}
+
+.cinta-diamante {
+  color: var(--dorado-claro);
+  font-size: 0.6rem;
+}
+
+@keyframes cinta-mover {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 760px) {
+  .cinta {
+    font-size: 0.65rem;
+  }
+}
+
+/* ---------- Banner de la portada (carrusel) ---------- */
+.banner {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--borde);
+}
+
+.banner-pista {
+  display: grid;
+}
+
+.diapositiva {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.9s ease, visibility 0.9s;
+}
+
+.diapositiva.activa {
+  opacity: 1;
+  visibility: visible;
+}
+
+.diapositiva-fila {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 2rem;
+  min-height: 470px;
+  padding-top: 3rem;
+  padding-bottom: 3.5rem;
+}
+
+.banner-texto {
+  max-width: 520px;
+}
+
+.banner-texto .hero-texto {
+  margin-left: 0;
+}
+
+/* Fondos de cada diapositiva */
+.diapositiva-claro {
+  background:
+    radial-gradient(ellipse 55% 75% at 78% 45%, var(--brillo-hero), transparent 70%),
+    linear-gradient(120deg, var(--fondo) 0%, var(--fondo-alterno) 100%);
+}
+
+.diapositiva-esmeralda {
+  background:
+    radial-gradient(ellipse 50% 80% at 75% 50%, rgba(226, 191, 114, 0.22), transparent 70%),
+    linear-gradient(120deg, var(--esmeralda) 0%, var(--esmeralda-claro) 100%);
+  color: var(--crema);
+}
+
+.diapositiva-esmeralda .hero-titulo {
+  color: var(--crema);
+}
+
+.diapositiva-esmeralda .hero-texto {
+  color: rgba(247, 239, 221, 0.8);
+}
+
+.diapositiva-esmeralda .eyebrow {
+  color: var(--dorado-claro);
+}
+
+.diapositiva-champana {
+  background:
+    radial-gradient(ellipse 50% 80% at 78% 50%, rgba(255, 255, 255, 0.55), transparent 70%),
+    linear-gradient(120deg, #f3e3c3 0%, #e6cc98 100%);
+}
+
+:root[data-tema='oscuro'] .diapositiva-champana {
+  background:
+    radial-gradient(ellipse 50% 80% at 78% 50%, rgba(212, 175, 95, 0.22), transparent 70%),
+    linear-gradient(120deg, #1a1a12 0%, #2b2414 100%);
+}
+
+/* Cuando una diapositiva entra, el texto sube en cascada */
+.diapositiva.activa .banner-texto > * {
+  animation: subir 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+.diapositiva.activa .banner-texto > *:nth-child(2) { animation-delay: 0.1s; }
+.diapositiva.activa .banner-texto > *:nth-child(3) { animation-delay: 0.2s; }
+.diapositiva.activa .banner-texto > *:nth-child(4) { animation-delay: 0.3s; }
+
+/* Vitrina: el círculo dorado donde va el dibujo (o la foto) */
+.vitrina {
+  position: relative;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: min(340px, 80vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.15) 60%, transparent 72%);
+  border: 1px solid rgba(176, 125, 42, 0.45);
+  box-shadow: 0 0 0 14px rgba(176, 125, 42, 0.07), 0 30px 60px rgba(20, 35, 27, 0.12);
+  color: var(--dorado);
+}
+
+:root[data-tema='oscuro'] .vitrina,
+.diapositiva-esmeralda .vitrina {
+  background: radial-gradient(circle at 35% 30%, rgba(226, 191, 114, 0.18), rgba(226, 191, 114, 0.04) 60%, transparent 72%);
+  box-shadow: 0 0 0 14px rgba(226, 191, 114, 0.06), 0 30px 60px rgba(0, 0, 0, 0.25);
+}
+
+.diapositiva-esmeralda .vitrina {
+  color: var(--dorado-claro);
+}
+
+.diapositiva.activa .vitrina {
+  animation: acercar 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+.vitrina-orbita {
+  position: absolute;
+  inset: -22px;
+  border: 1px dashed rgba(176, 125, 42, 0.45);
+  border-radius: 50%;
+  animation: girar 40s linear infinite;
+}
+
+.vitrina-orbita::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dorado-claro);
+  box-shadow: 0 0 12px var(--dorado-claro);
+}
+
+.vitrina-dibujo {
+  display: grid;
+  place-items: center;
+  width: 58%;
+  height: 58%;
+  animation: flotar 5s ease-in-out infinite;
+}
+
+.vitrina-dibujo svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 1.2;
+  filter: drop-shadow(0 6px 14px rgba(176, 125, 42, 0.25));
+}
+
+.vitrina-foto {
+  width: 86%;
+  height: 86%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Destellos que titilan alrededor de la vitrina */
+.destello {
+  position: absolute;
+  color: var(--dorado-claro);
+  font-size: 1.1rem;
+  animation: titilar 2.6s ease-in-out infinite;
+}
+
+.destello-1 { top: 6%; right: 12%; }
+.destello-2 { bottom: 12%; left: 4%; font-size: 0.8rem; animation-delay: 0.9s; }
+.destello-3 { top: 40%; right: -6%; font-size: 0.7rem; animation-delay: 1.7s; }
+
+/* Flechas y puntos del carrusel */
+.banner-flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(176, 125, 42, 0.5);
+  background: color-mix(in srgb, var(--superficie) 70%, transparent);
+  color: var(--texto);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s, background-color 0.2s;
+}
+
+.banner:hover .banner-flecha,
+.banner-flecha:focus-visible {
+  opacity: 1;
+}
+
+.banner-flecha:hover {
+  background: var(--dorado-claro);
+  color: #1a1408;
+}
+
+.banner-flecha.izquierda { left: 1.2rem; }
+.banner-flecha.derecha { right: 1.2rem; }
+
+.banner-puntos {
+  position: absolute;
+  left: 50%;
+  bottom: 1.2rem;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.banner-puntos button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(176, 125, 42, 0.4);
+  cursor: pointer;
+  transition: width 0.4s ease, background-color 0.4s;
+}
+
+.banner-puntos button.activo {
+  width: 30px;
+  background: var(--dorado);
+}
+
+/* Movimientos del banner */
+@keyframes subir {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes acercar {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes titilar {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Banner en celular: el círculo arriba y el texto centrado */
+@media (max-width: 760px) {
+  .diapositiva-fila {
+    grid-template-columns: 1fr;
+    text-align: center;
+    min-height: 0;
+    gap: 1.6rem;
+    padding-top: 2rem;
+    padding-bottom: 3.2rem;
+  }
+
+  .banner-texto {
+    margin: 0 auto;
+  }
+
+  .banner-texto .hero-texto {
+    margin-left: auto;
+  }
+
+  .vitrina {
+    width: 210px;
+    order: -1;
+  }
+
+  .banner-flecha {
+    display: none;
+  }
+}
+
+/* ---------- Modo oscuro: cinta dorada y franja oscura con bordes dorados ---------- */
+:root[data-tema='oscuro'] .cinta {
+  background: linear-gradient(90deg, #b8913f, #e2c47f, #b8913f);
+  color: #14110a;
+  font-weight: 600;
+}
+
+:root[data-tema='oscuro'] .cinta-diamante {
+  color: #0e2a1d;
+}
+
+:root[data-tema='oscuro'] .franja {
+  background:
+    radial-gradient(ellipse 45% 140% at 50% 50%, rgba(212, 175, 95, 0.12), transparent 70%),
+    var(--superficie);
+  border-top: 1px solid rgba(212, 175, 95, 0.35);
+  border-bottom: 1px solid rgba(212, 175, 95, 0.35);
+}
+
+:root[data-tema='oscuro'] .franja span {
+  color: var(--texto-suave);
+}
+
+/* ---------- Aparecer al bajar con el scroll ---------- */
+.con-aparecer :is(.tarjeta, .tarjeta-categoria, .seccion-cabecera, .subtitulo-seccion, .panel, .detalle, .franja-fila > div):not(.visible) {
+  opacity: 0;
+}
+
+.con-aparecer .visible {
+  animation: subir 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* Si la persona pidió "reducir movimiento" en su computador, se quita todo */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .con-aparecer :is(.tarjeta, .tarjeta-categoria, .seccion-cabecera, .subtitulo-seccion, .panel, .detalle, .franja-fila > div):not(.visible) {
+    opacity: 1;
+  }
 }
