@@ -3,6 +3,8 @@ const express = require('express');
 const pool = require('../db');
 const { STOCK_MINIMO } = require('../config');
 const { requierePermiso } = require('../auth');
+const { estadoExistencia, periodoReporte } = require('../reglas');
+
 
 const router = express.Router();
 
@@ -300,9 +302,7 @@ router.get('/api/existencias', requierePermiso('existencias:ver'), async (req, r
 
     const productos = result.rows.map((p) => {
       const stock = p.stock || 0;
-      let estado = 'DISPONIBLE';
-      if (stock === 0) estado = 'SIN_STOCK';
-      else if (stock <= STOCK_MINIMO) estado = 'STOCK_BAJO';
+      const estado = estadoExistencia(stock, STOCK_MINIMO);
       return { ...p, stock, estado };
     });
 
@@ -387,8 +387,8 @@ router.get('/api/alertas/stock-bajo', requierePermiso('alertas:ver'), async (req
 router.get('/api/reportes/inventario', requierePermiso('reportes:ver'), async (req, res) => {
   try {
     // Periodo (en días) para el resumen de movimientos. Por defecto, 30.
-    const dias = req.query.dias === undefined ? 30 : Number(req.query.dias);
-    if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
+    const dias = periodoReporte(req.query.dias);
+    if (dias === null) {
       return res.status(400).json({ error: 'El periodo debe ser un número entero de días entre 1 y 365' });
     }
 
