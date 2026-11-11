@@ -1,9 +1,9 @@
 # Resultados de las pruebas automáticas de la HU-017
 
-- Fecha de ejecución: 8/11/2026, 11:27:41 p. m.
-- API probada: https://brillagest.onrender.com
+- Fecha de ejecución: 11/11/2026, 3:39:29 p. m.
+- API probada: http://localhost:4000
 - Resumen: 30 pruebas: 30 pasan, 0 fallan.
-- Limpieza: El producto de prueba (id 31) no se pudo eliminar porque tiene movimientos; quedó oculto de la página web.
+- Limpieza: El producto de prueba (id 35) no se pudo eliminar porque tiene movimientos; quedó oculto de la página web.
 
 | ID | Prueba | Esperado | Obtenido | Resultado |
 | --- | --- | --- | --- | --- |

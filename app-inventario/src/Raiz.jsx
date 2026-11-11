@@ -60,15 +60,25 @@ function Raiz() {
     if (obtenerUsuario()) actualizarPerfil();
   }, []);
 
-  // Si el backend responde 403, api.js avisa con este evento
-  useEffect(() => {
-    const alDenegar = (e) => {
-      setAviso(e.detail || 'No tiene permiso para realizar esta acción.');
-      setTimeout(() => setAviso(''), 5000);
-    };
-    window.addEventListener('acceso-denegado', alDenegar);
-    return () => window.removeEventListener('acceso-denegado', alDenegar);
-  }, []);
+ // Si el backend responde 403, api.js avisa con este evento
+useEffect(() => {
+  const alDenegar = (e) => {
+    setAviso(e.detail || 'No tiene permiso para realizar esta acción.');
+    setTimeout(() => setAviso(''), 5000);
+    // DEF-004: si el servidor dice que ya no tiene permiso, se traen los permisos nuevos
+    // para que la pantalla deje de mostrar las opciones que su rol ya no tiene.
+    actualizarPerfil();
+  };
+  // DEF-004: al volver a la ventana también se actualizan los permisos (por si cambiaron el rol)
+  const alVolver = () => actualizarPerfil();
+
+  window.addEventListener('acceso-denegado', alDenegar);
+  window.addEventListener('focus', alVolver);
+  return () => {
+    window.removeEventListener('acceso-denegado', alDenegar);
+    window.removeEventListener('focus', alVolver);
+  };
+}, []);
 
   const alEntrar = (u) => {
     setUsuario(u);

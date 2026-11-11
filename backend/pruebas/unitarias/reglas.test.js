@@ -29,6 +29,17 @@ describe('HU-001 — Registrar producto', () => {
     assert.equal(siguienteSku(0), 'PROD-0001');
     assert.equal(siguienteSku(41), 'PROD-0042');
   });
+
+  test('HU001-CP17: precio negativo devuelve error (corrección del DEF-001)', () => {
+    const resultado = validarProducto({ nombre: 'Anillo', categoria: 'Anillos', material: 'Oro 18k', precio: -5000 });
+    assert.equal(resultado, 'El precio debe ser un número mayor que cero');
+  });
+
+  test('HU001-CP18: precio que no es número devuelve error (corrección del DEF-001)', () => {
+    const resultado = validarProducto({ nombre: 'Anillo', categoria: 'Anillos', material: 'Oro 18k', precio: 'abc' });
+    assert.equal(resultado, 'El precio debe ser un número mayor que cero');
+  });
+
 });
 
 

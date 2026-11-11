@@ -50,7 +50,14 @@ export async function apiFetch(url, opciones = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const respuesta = await fetch(url, { ...opciones, headers });
+  // MEJ-001: si el servidor está apagado o no hay internet, fetch falla con "Failed to fetch" (en inglés).
+  // Se cambia por un mensaje claro en español, igual al de la pantalla de inicio de sesión.
+  let respuesta;
+  try {
+    respuesta = await fetch(url, { ...opciones, headers });
+  } catch {
+    throw new Error('No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.');
+  }
 
   if (respuesta.status === 401) {
     cerrarSesion();

@@ -358,8 +358,11 @@ function App({ usuario, seccion = 'inventario' }) {
               <input id="f-precio" name="precio" type="number" value={form.precio} onChange={handleChange} required />
             </div>
             <div className="campo">
-              <label htmlFor="f-stock">Stock inicial</label>
-              <input id="f-stock" name="stock" type="number" value={form.stock} onChange={handleChange} />
+              <label htmlFor="f-stock">{editandoId ? 'Stock actual' : 'Stock inicial'}</label>
+              <input id="f-stock" name="stock" type="number" min="0" value={form.stock} onChange={handleChange} disabled={Boolean(editandoId)} />
+              {editandoId && (
+                <small className="texto-suave">El stock solo cambia con entradas y salidas (Movimientos).</small>
+              )}
             </div>
           </div>
 

@@ -3,7 +3,7 @@ const express = require('express');
 const pool = require('../db');
 const { STOCK_MINIMO } = require('../config');
 const { requierePermiso } = require('../auth');
-const { estadoExistencia, periodoReporte } = require('../reglas');
+const { estadoExistencia, periodoReporte, validarProducto, siguienteSku, puedeEliminarProducto } = require('../reglas');
 
 
 const router = express.Router();
@@ -13,8 +13,7 @@ async function generarSku() {
   const result = await pool.query(
     `SELECT COALESCE(MAX(SUBSTRING(sku FROM 'PROD-(\\d+)')::int), 0) AS maximo FROM productos`
   );
-  const siguiente = result.rows[0].maximo + 1;
-  return `PROD-${String(siguiente).padStart(4, '0')}`;
+  return siguienteSku(result.rows[0].maximo);
 }
 
 // Crear un producto nuevo
@@ -22,12 +21,10 @@ router.post('/api/productos', requierePermiso('productos:editar'), async (req, r
   try {
     const { nombre, categoria, material, peso, precio, stock, marca, tipo } = req.body;
 
-    if (!nombre || !categoria || !precio) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios' });
-    }
-
-    if (categoria !== 'Relojes' && !material) {
-      return res.status(400).json({ error: 'El material es obligatorio para esta categoría' });
+    // HU-001 y HU-003: las validaciones están en reglas.js (probadas con pruebas unitarias)
+    const errorValidacion = validarProducto({ nombre, categoria, material, precio });
+    if (errorValidacion) {
+      return res.status(400).json({ error: errorValidacion });
     }
 
     const sku = await generarSku();
@@ -74,21 +71,20 @@ router.get('/api/productos', requierePermiso('productos:ver'), async (req, res) 
 router.put('/api/productos/:id', requierePermiso('productos:editar'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, categoria, material, peso, precio, stock, marca, tipo } = req.body;
+    const { nombre, categoria, material, peso, precio, marca, tipo } = req.body;
 
-    if (!nombre || !categoria || !precio) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    // HU-001 y HU-003: las validaciones están en reglas.js (probadas con pruebas unitarias)
+    const errorValidacion = validarProducto({ nombre, categoria, material, precio });
+    if (errorValidacion) {
+      return res.status(400).json({ error: errorValidacion });
     }
 
-    if (categoria !== 'Relojes' && !material) {
-      return res.status(400).json({ error: 'El material es obligatorio para esta categoría' });
-    }
-
+    // DEF-002: el stock NO se cambia al editar; solo cambia con entradas y salidas (HU-005 y HU-006)
     const result = await pool.query(
       `UPDATE productos
-       SET nombre = $1, categoria = $2, material = $3, peso = $4, precio = $5, stock = $6, marca = $7, tipo = $8
-       WHERE id = $9 RETURNING *`,
-      [nombre, categoria, material || null, peso || null, precio, stock || 0, marca || null, tipo || null, id]
+       SET nombre = $1, categoria = $2, material = $3, peso = $4, precio = $5, marca = $6, tipo = $7
+       WHERE id = $8 RETURNING *`,
+      [nombre, categoria, material || null, peso || null, precio, marca || null, tipo || null, id]
     );
 
     if (result.rows.length === 0) {
@@ -140,7 +136,20 @@ router.patch('/api/productos/:id/publicado', requierePermiso('productos:editar')
 // Eliminar un producto
 router.delete('/api/productos/:id', requierePermiso('productos:editar'), async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+
+    // DEF-003: validar que el id sea un número entero positivo
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Producto inválido' });
+    }
+
+    // DEF-003: si el producto tiene movimientos no se elimina, para conservar el historial (regla en reglas.js)
+    const movimientos = await pool.query('SELECT COUNT(*) AS total FROM movimientos WHERE producto_id = $1', [id]);
+    const errorEliminar = puedeEliminarProducto(movimientos.rows[0].total);
+    if (errorEliminar) {
+      return res.status(409).json({ error: errorEliminar });
+    }
+
     const result = await pool.query('DELETE FROM productos WHERE id = $1 RETURNING *', [id]);
 
     if (result.rows.length === 0) {
@@ -149,7 +158,9 @@ router.delete('/api/productos/:id', requierePermiso('productos:editar'), async (
 
     res.json({ mensaje: 'Producto eliminado', producto: result.rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // DEF-003: no mostrar al usuario el error técnico de la base de datos
+    console.error('Error al eliminar producto:', err);
+    res.status(500).json({ error: 'No se pudo eliminar el producto. Intente de nuevo.' });
   }
 });
 

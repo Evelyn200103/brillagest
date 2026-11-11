@@ -7,6 +7,9 @@
 function validarProducto({ nombre, categoria, material, precio } = {}) {
   if (!nombre || !categoria || !precio) return 'Faltan campos obligatorios';
   if (categoria !== 'Relojes' && !material) return 'El material es obligatorio para esta categoría';
+  // DEF-001: el precio debe ser un número y mayor que cero
+  const valorPrecio = Number(precio);
+  if (!Number.isFinite(valorPrecio) || valorPrecio <= 0) return 'El precio debe ser un número mayor que cero';
   return null;
 }
 
