@@ -7,6 +7,7 @@ import DisponibilidadProducto from './DisponibilidadProducto';
 import CintaAnuncios from './CintaAnuncios';
 import BannerPortada from './BannerPortada';
 import useAparecer from './useAparecer';
+import Chatbot from './Chatbot';
 
 // Página web pública de la joyería: solo catálogo, sin inicio de sesión.
 // La gestión de inventario y usuarios está en app-inventario (HU-024).
@@ -57,6 +58,7 @@ function App() {
       </main>
 
       <PiePagina />
+      <Chatbot />
     </>
   );
 }

@@ -5,6 +5,7 @@ const pool = require('./db');
 const { verificarToken } = require('./auth');
 const rutasInventario = require('./rutas/inventario');
 const rutasCatalogo = require('./rutas/catalogo');
+const rutasChatbot = require('./rutas/chatbot');
 const rutasAuth = require('./rutas/auth');
 const rutasUsuarios = require('./rutas/usuarios');
 const { exigirHttps, cabecerasSeguras, opcionesCors } = require('./seguridad');
@@ -26,6 +27,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.use(rutasCatalogo);
+app.use(rutasChatbot); // HU-018: chatbot público
 app.use(rutasAuth);
 app.use(rutasUsuarios);
 app.use(verificarToken, rutasInventario);
