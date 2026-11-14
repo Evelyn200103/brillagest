@@ -137,7 +137,7 @@ async function responderProductosDeCategoria(nombreCategoria) {
     return { tipo: 'no_entendido', respuesta: `No reconozco esa categoría. ${MENSAJE_AYUDA}`, datos: [] };
   }
   const r = await pool.query(
-    `SELECT id, sku, nombre, categoria, precio, stock
+    `SELECT id, sku, nombre, categoria, material, precio, stock
        FROM productos WHERE categoria = $1 AND publicado = true
        ORDER BY (COALESCE(stock, 0) > 0) DESC, nombre ASC`,
     [categoria]
@@ -159,10 +159,20 @@ async function responderProductosDeCategoria(nombreCategoria) {
       `En ${categoria} tenemos ${productos.length} producto${productos.length === 1 ? '' : 's'}:\n` +
       lineas.join('\n') +
       (resto > 0 ? `\n…y ${resto} más en el catálogo.` : ''),
-    datos: mostrados,
+    datos: mostrados.map(resumenProducto),
   };
 }
 
+// Datos del producto que se envían a la página (sin stock): permiten mostrar la tarjeta y abrir el detalle.
+function resumenProducto(p) {
+  return {
+    id: p.id, nombre: p.nombre, categoria: p.categoria, material: p.material || null,
+    precio: p.precio, disponible: p.disponible, estado: p.estado,
+  };
+}
+
+// HU-019: busca productos por lo que escribió el cliente. Cada palabra debe aparecer en el
+// nombre, la categoría, el material, la marca o el tipo (sin importar tildes ni mayúsculas).
 async function responderProducto(textoProducto) {
   const palabras = sinTildes(textoProducto)
     .split(/[^a-z0-9ñ]+/)
@@ -176,17 +186,23 @@ async function responderProducto(textoProducto) {
     };
   }
 
-  // Todas las palabras deben aparecer en el nombre, sin importar tildes ni mayúsculas.
-  const condiciones = palabras.map((_, i) => `translate(lower(nombre), 'áéíóúü', 'aeiouu') LIKE $${i + 1}`);
+  const texto = (columna) => `translate(lower(COALESCE(${columna}, '')), 'áéíóúü', 'aeiouu')`;
+  const condiciones = palabras.map((_, i) =>
+    `(${['nombre', 'categoria', 'material', 'marca', 'tipo'].map((c) => `${texto(c)} LIKE $${i + 1}`).join(' OR ')})`
+  );
   const r = await pool.query(
-    `SELECT id, sku, nombre, categoria, precio, stock
+    `SELECT id, sku, nombre, categoria, material, precio, stock
        FROM productos
       WHERE publicado = true AND ${condiciones.join(' AND ')}
       ORDER BY (COALESCE(stock, 0) > 0) DESC, nombre ASC
-      LIMIT 6`,
+      LIMIT ${MAX_PRODUCTOS_LISTA + 1}`,
     palabras.map((p) => `%${p}%`)
   );
-  const productos = r.rows.map(conDisponibilidad);
+  let productos = r.rows.map(conDisponibilidad);
+
+  // Si el cliente escribió el nombre exacto de un producto, es ese (aunque otros se parezcan)
+  const exacto = productos.filter((p) => sinTildes(p.nombre).trim() === sinTildes(textoProducto).trim());
+  if (exacto.length === 1) productos = exacto;
 
   if (productos.length === 0) {
     return {
@@ -203,14 +219,17 @@ async function responderProducto(textoProducto) {
     return {
       tipo: 'producto',
       respuesta: `${p.nombre} (${p.categoria}): cuesta ${formatoPrecio(p.precio)} y ${estado}.`,
-      datos: [p],
+      datos: [resumenProducto(p)],
     };
   }
-  const lineas = productos.map((p) => `• ${p.nombre} — ${formatoPrecio(p.precio)} (${p.estado})`);
+  const mostrados = productos.slice(0, MAX_PRODUCTOS_LISTA);
+  const mas = productos.length > MAX_PRODUCTOS_LISTA;
   return {
     tipo: 'productos',
-    respuesta: `Encontré varios productos que coinciden:\n${lineas.join('\n')}\nEscribe el nombre completo del que te interesa.`,
-    datos: productos,
+    respuesta:
+      `Encontré ${mas ? 'varios' : mostrados.length} productos que coinciden con "${textoProducto.trim()}". ` +
+      'Elige el que te interesa o escribe su nombre completo.',
+    datos: mostrados.map(resumenProducto),
   };
 }
 

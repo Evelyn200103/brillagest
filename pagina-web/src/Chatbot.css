@@ -177,3 +177,37 @@
 @media (max-width: 480px) {
   .chat { right: 12px; bottom: 12px; }
 }
+
+/* HU-019: tarjetas de producto dentro del chat */
+.chat-grupo { display: flex; flex-direction: column; gap: 6px; }
+.chat-grupo-bot { align-items: flex-start; }
+.chat-grupo-usuario { align-items: flex-end; }
+.chat-productos { list-style: none; margin: 0; padding: 0; width: 92%; display: flex; flex-direction: column; gap: 6px; }
+.chat-producto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.chat-producto strong { display: block; font-size: 13px; }
+.chat-producto span { color: var(--texto-suave); font-size: 12px; }
+.chat-producto em { font-style: normal; font-weight: 600; }
+.chat-ok { color: var(--verde-texto); }
+.chat-agotado { color: var(--rojo); }
+.chat-producto button {
+  flex-shrink: 0;
+  border: 1px solid var(--dorado);
+  background: transparent;
+  color: var(--dorado-texto);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font: 600 12px var(--letra-texto);
+  cursor: pointer;
+}
+.chat-producto button:hover { background: var(--fondo-alterno); }
+.chat-producto button:focus-visible { outline: 2px solid var(--dorado); outline-offset: 2px; }

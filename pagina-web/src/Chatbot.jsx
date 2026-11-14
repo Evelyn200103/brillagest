@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { formatoPrecio } from './formato';
 import './Chatbot.css';
 
 // HU-018: asistente virtual de la página web (Dialogflow ES a través del backend).
@@ -24,7 +25,7 @@ function obtenerSesion() {
   return nueva;
 }
 
-function Chatbot() {
+function Chatbot({ onVerProducto }) {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState([BIENVENIDA]);
   const [sugerencias, setSugerencias] = useState(SUGERENCIAS_INICIALES);
@@ -47,9 +48,15 @@ function Chatbot() {
     if (abierto) campo.current?.focus();
   }, [abierto]);
 
-  const agregar = (autor, contenido) => {
+  const agregar = (autor, contenido, productos = []) => {
     contador.current += 1;
-    setMensajes((previos) => [...previos, { id: contador.current, autor, texto: contenido }]);
+    setMensajes((previos) => [...previos, { id: contador.current, autor, texto: contenido, productos }]);
+  };
+
+  // HU-019: abre el detalle del producto en la página y deja el chat a un lado
+  const verProducto = (id) => {
+    if (onVerProducto) onVerProducto(id);
+    setAbierto(false);
   };
 
   const enviar = async (mensaje, { reintento = false } = {}) => {
@@ -74,7 +81,7 @@ function Chatbot() {
       if (!respuesta.ok) {
         throw new Error((datos && datos.error) || 'No pudimos procesar tu consulta.');
       }
-      agregar('bot', datos.respuesta);
+      agregar('bot', datos.respuesta, Array.isArray(datos.datos) ? datos.datos.filter((p) => p && p.id) : []);
       setSugerencias(Array.isArray(datos.sugerencias) ? datos.sugerencias : []);
     } catch (e) {
       // fetch lanza TypeError cuando no hay conexión con el servidor
@@ -109,8 +116,26 @@ function Chatbot() {
 
           <div className="chat-mensajes" aria-live="polite">
             {mensajes.map((m) => (
-              <div key={m.id} className={`chat-burbuja chat-${m.autor}`}>
-                {m.texto}
+              <div key={m.id} className={`chat-grupo chat-grupo-${m.autor}`}>
+                <div className={`chat-burbuja chat-${m.autor}`}>{m.texto}</div>
+                {m.productos && m.productos.length > 0 && (
+                  <ul className="chat-productos">
+                    {m.productos.map((p) => (
+                      <li key={p.id} className="chat-producto">
+                        <div>
+                          <strong>{p.nombre}</strong>
+                          <span>
+                            {formatoPrecio(p.precio)} ·{' '}
+                            <em className={p.disponible ? 'chat-ok' : 'chat-agotado'}>{p.estado}</em>
+                          </span>
+                        </div>
+                        <button type="button" onClick={() => verProducto(p.id)} aria-label={`Ver detalle de ${p.nombre}`}>
+                          Ver detalle
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
 

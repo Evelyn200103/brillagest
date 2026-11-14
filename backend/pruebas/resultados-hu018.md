@@ -1,6 +1,6 @@
 # Pruebas de la HU-018 — Consultar información mediante el chatbot
 
-- Fecha de ejecución: 11/11/2026, 10:13:38 p. m.
+- Fecha de ejecución: 14/11/2026, 6:21:21 p. m.
 - Resumen: 31 pruebas, 31 pasan, 0 fallan.
 
 | Prueba | Criterio | Descripción | Resultado | Detalle |
@@ -12,9 +12,9 @@
 | T05 | C6 | La respuesta no muestra el stock exacto (solo disponible/agotado) | PASA |  |
 | T06 | C3, C4 | Saludo ("hola"): responde con la bienvenida y sugerencias | PASA | intención Default Welcome Intent |
 | T07 | C5 | Ayuda: el chatbot explica qué consultas puede atender | PASA |  |
-| T08 | C3, C4, C6 | Producto existente y disponible: informa nombre, precio y que está disponible | PASA | Anillo Zafiro P210081 (Anillos): cuesta $ 250.000 y está disponible. |
+| T08 | C3, C4, C6 | Producto existente y disponible: informa nombre, precio y que está disponible | PASA | Anillo Zafiro P474493 (Anillos): cuesta $ 250.000 y está disponible. |
 | T09 | C6 | El precio que dice el chatbot coincide con el de la base de datos | PASA | BD $ 250.000 |
-| T10 | C6 | Producto agotado: informa que está agotado | PASA | Anillo Agotado P210081 (Anillos): cuesta $ 180.000 y está agotado por ahora. |
+| T10 | C6 | Producto agotado: informa que está agotado | PASA | Anillo Agotado P474493 (Anillos): cuesta $ 180.000 y está agotado por ahora. |
 | T11 | C4 | El nombre del producto se reconoce sin importar mayúsculas ni tildes | PASA | producto |
 | T12 | C4 | Nombre ambiguo ("Anillo"): lista los productos que coinciden y pide el nombre completo, sin inventar | PASA | productos |
 | T13 | Pruebas: producto inexistente | Producto inexistente: responde que no lo encontró y orienta al cliente (sin error) | PASA | producto_no_encontrado |
