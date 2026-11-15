@@ -10,9 +10,10 @@ const BIENVENIDA = {
   id: 'bienvenida',
   autor: 'bot',
   texto:
-    '¡Hola! Soy el asistente de Joyería Sánchez. Puedo mostrarte categorías, productos, precios y disponibilidad. ¿Qué te gustaría ver?',
+    '¡Hola! Soy el asistente de Joyería Sánchez. Puedo mostrarte categorías, productos, precios y disponibilidad, y resolver dudas sobre horario, ubicación, pagos y envíos. ¿En qué te ayudo?',
 };
-const SUGERENCIAS_INICIALES = ['Ver categorías', 'Qué anillos tienen', 'Precio del dije corazón'];
+// HU-020: se suman consultas frecuentes a las sugerencias iniciales
+const SUGERENCIAS_INICIALES = ['Ver categorías', 'Qué anillos tienen', 'Horario de atención', 'Medios de pago', '¿Hacen envíos?'];
 
 // Identificador de la conversación (Dialogflow lo usa para recordar el contexto).
 function obtenerSesion() {

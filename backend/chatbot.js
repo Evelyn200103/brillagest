@@ -5,6 +5,7 @@
 // base de datos y arma la respuesta. Así la información siempre coincide con el sistema.
 const pool = require('./db');
 const { conDisponibilidad } = require('./disponibilidad');
+const { esIntencionFaq, responderFaq } = require('./faq'); // HU-020: consultas frecuentes
 
 const CATEGORIAS = [
   'Anillos', 'Pulseras', 'Cadenas', 'Topos', 'Dijes',
@@ -17,12 +18,14 @@ const MAX_LARGO_MENSAJE = 300;
 
 const MENSAJE_AYUDA =
   'Puedo ayudarte con: ver las categorías de joyas, mostrarte los productos de una categoría, ' +
-  'y consultar el precio y la disponibilidad de un producto. ' +
-  'Por ejemplo: "qué anillos tienen" o "precio del dije corazón".';
+  'consultar el precio y la disponibilidad de un producto, y resolver preguntas frecuentes ' +
+  'sobre horario, ubicación, medios de pago, envíos, garantía y servicios. ' +
+  'Por ejemplo: "qué anillos tienen", "precio del dije corazón" o "a qué hora abren".';
 
 const MENSAJE_NO_ENTENDIDO = `No logré entender tu consulta. ${MENSAJE_AYUDA}`;
 
-const SUGERENCIAS = ['Ver categorías', 'Qué anillos tienen', 'Precio del dije corazón'];
+// HU-020: además de los productos, se sugieren dos consultas frecuentes para orientar al cliente.
+const SUGERENCIAS = ['Ver categorías', 'Qué anillos tienen', 'Horario de atención', 'Medios de pago'];
 
 // ---------- Cliente de Dialogflow ES ----------
 
@@ -265,8 +268,13 @@ async function procesarMensaje(texto, sesionId, detectar = detectarIntencionDial
       salida = { tipo: 'texto', respuesta: d.textoDialogflow || '¡Hola! Soy el asistente de Joyería Sánchez. ¿Qué te gustaría ver?', sugerencias: SUGERENCIAS };
       break;
     default:
-      // Intención que Dialogflow reconoce pero el sistema aún no soporta
-      salida = { tipo: 'no_entendido', respuesta: MENSAJE_NO_ENTENDIDO, sugerencias: SUGERENCIAS };
+      if (esIntencionFaq(d.intencion)) {
+        // HU-020: consulta frecuente → respuesta aprobada por la joyería (backend/faq.js)
+        salida = responderFaq(d.intencion);
+      } else {
+        // Intención que Dialogflow reconoce pero el sistema aún no soporta
+        salida = { tipo: 'no_entendido', respuesta: MENSAJE_NO_ENTENDIDO, sugerencias: SUGERENCIAS };
+      }
   }
   return { intencion: d.intencion, ...salida };
 }
