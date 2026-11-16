@@ -152,6 +152,12 @@ const PREGUNTAS_FRECUENTES = [
       'se me rompió la cadena',
       'le cambian la batería al reloj',
       'hacen mantenimiento de joyas',
+      // DEF-007 (HU-029): frases con nombres de joyas, para no confundir servicios con encargos
+      'limpian anillos y cadenas',
+      'quiero que me limpien una pulsera',
+      'me pueden reparar un anillo',
+      'le cambian el broche a una cadena',
+      'pueden pulir unos aretes',
     ],
     respuesta:
       'Hacemos arreglos de joyas, grabados, limpieza y cambio de pila de relojes. ' +

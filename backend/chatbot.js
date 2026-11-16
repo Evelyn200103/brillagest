@@ -72,6 +72,11 @@ async function detectarIntencionDialogflow(texto, sesionId) {
   const [respuesta] = await sesiones.detectIntent({
     session: sesiones.projectAgentSessionPath(projectId, sesionId),
     queryInput: { text: { text: texto, languageCode: 'es' } },
+    // DEF-010 (HU-029): cada mensaje se analiza sin arrastrar el contexto del anterior. Sin esto,
+    // tras "precio" Dialogflow se quedaba esperando un producto y tomaba el siguiente mensaje
+    // ("le pueden hacer limpieza a mi anillo") como su nombre. El backend no usa contextos:
+    // responde solo con el mensaje actual, así que no se pierde nada.
+    queryParams: { resetContexts: true },
   });
   const r = respuesta.queryResult || {};
   const campos = (r.parameters && r.parameters.fields) || {};
@@ -106,6 +111,25 @@ function sinTildes(texto) {
 const PALABRAS_VACIAS = new Set([
   'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'con', 'para', 'por', 'que', 'en', 'al',
 ]);
+
+// DEF-008 (HU-029): palabras con las que el cliente PIDE un precio o la disponibilidad,
+// y que no forman parte del nombre de ningún producto.
+const PALABRAS_DE_CONSULTA = new Set([
+  'me', 'mi', 'nos', 'regalas', 'regalame', 'regala', 'das', 'da', 'dame', 'dar', 'podrias', 'puedes',
+  'podria', 'decir', 'dices', 'saber', 'quiero', 'quisiera', 'busco', 'buscar', 'cual', 'es', 'son',
+  'precio', 'precios', 'valor', 'vale', 'valen', 'cuesta', 'cuestan', 'cuanto', 'cuantos',
+  'tienen', 'tiene', 'tienes', 'hay', 'esta', 'estan', 'disponible', 'disponibles', 'disponibilidad',
+  'existencias', 'informacion', 'sobre', 'favor', 'y', 'ese', 'esa', 'este', 'eso', 'esto', 'porfa',
+]);
+
+// Lo que queda del mensaje del cliente al quitar las palabras de consulta y las vacías.
+// "me regalas el precio de Anillo Clásico" → "anillo clasico"
+function productoDesdeMensaje(mensaje) {
+  return sinTildes(String(mensaje || ''))
+    .split(/[^a-z0-9ñ]+/)
+    .filter((p) => p.length >= 2 && !PALABRAS_VACIAS.has(p) && !PALABRAS_DE_CONSULTA.has(p))
+    .join(' ');
+}
 
 function categoriaValida(texto) {
   const buscada = sinTildes(String(texto || '').trim());
@@ -276,6 +300,20 @@ async function procesarMensaje(texto, sesionId, detectar = detectarIntencionDial
       salida = d.parametros.producto
         ? await responderProducto(d.parametros.producto)
         : { tipo: 'texto', respuesta: d.textoDialogflow || MENSAJE_AYUDA };
+      // DEF-008 (HU-029): a veces Dialogflow extrae mal el producto (por ejemplo "me" en
+      // "me regalas el precio de Anillo Clásico"). Si no se encontró un producto, se busca
+      // con el mensaje completo del cliente sin las palabras de consulta.
+      if (salida.tipo !== 'producto' && salida.tipo !== 'productos') {
+        const alterno = productoDesdeMensaje(texto);
+        if (!alterno) {
+          // DEF-009 (HU-029): el mensaje no nombra ningún producto ("precio", "cuánto cuesta").
+          // En vez de "Déjame revisar ese producto." o "no encontré «cuánto cuesta»", se pide el nombre.
+          salida = await responderProducto('');
+        } else if (sinTildes(alterno) !== sinTildes(d.parametros.producto || '')) {
+          const otra = await responderProducto(alterno);
+          if (otra.tipo === 'producto' || otra.tipo === 'productos') salida = otra;
+        }
+      }
       break;
     case 'ayuda_chatbot':
       salida = { tipo: 'texto', respuesta: MENSAJE_AYUDA, sugerencias: SUGERENCIAS };
