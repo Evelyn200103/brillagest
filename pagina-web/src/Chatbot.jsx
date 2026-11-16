@@ -5,6 +5,7 @@ import './Chatbot.css';
 // HU-018: asistente virtual de la página web (Dialogflow ES a través del backend).
 const API = import.meta.env.VITE_API_URL;
 const MAX_CARACTERES = 300;
+const TIEMPO_MAXIMO_MS = 20000; // si el servidor no responde en 20 s, se avisa y se permite reintentar
 
 const BIENVENIDA = {
   id: 'bienvenida',
@@ -70,11 +71,15 @@ function Chatbot({ onVerProducto }) {
     setUltimo(limpio);
     setCargando(true);
 
+    const control = new AbortController();
+    const temporizador = setTimeout(() => control.abort(), TIEMPO_MAXIMO_MS);
+
     try {
       const respuesta = await fetch(`${API}/api/chatbot/mensaje`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mensaje: limpio, sesion: sesion.current }),
+        signal: control.signal,
       });
       let datos = null;
       try { datos = await respuesta.json(); } catch { /* sin cuerpo */ }
@@ -85,13 +90,16 @@ function Chatbot({ onVerProducto }) {
       agregar('bot', datos.respuesta, Array.isArray(datos.datos) ? datos.datos.filter((p) => p && p.id) : []);
       setSugerencias(Array.isArray(datos.sugerencias) ? datos.sugerencias : []);
     } catch (e) {
-      // fetch lanza TypeError cuando no hay conexión con el servidor
-      setError(
-        e instanceof TypeError
-          ? 'No hay conexión con el asistente. Revisa tu internet e inténtalo de nuevo.'
-          : e.message
-      );
+      // AbortError: tardó demasiado. TypeError: no hay conexión con el servidor.
+      if (e.name === 'AbortError') {
+        setError('El asistente está tardando demasiado en responder. Inténtalo de nuevo.');
+      } else if (e instanceof TypeError) {
+        setError('No hay conexión con el asistente. Revisa tu internet e inténtalo de nuevo.');
+      } else {
+        setError(e.message);
+      }
     } finally {
+      clearTimeout(temporizador);
       setCargando(false);
     }
   };

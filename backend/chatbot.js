@@ -239,8 +239,24 @@ async function responderProducto(textoProducto) {
 // ---------- Punto de entrada ----------
 
 // `detectar` se puede reemplazar en las pruebas por un Dialogflow simulado.
-async function procesarMensaje(texto, sesionId, detectar = detectarIntencionDialogflow) {
-  const d = await detectar(texto, sesionId);
+// HU-021: si Dialogflow no responde a tiempo, se corta la espera y la ruta responde con un aviso
+// amable (el chat de la página no se queda cargando para siempre).
+const TIEMPO_MAXIMO_DIALOGFLOW_MS = 10000;
+
+function conTiempoMaximo(promesa, ms) {
+  let temporizador;
+  const limite = new Promise((_, rechazar) => {
+    temporizador = setTimeout(() => {
+      const error = new Error('Dialogflow tardó demasiado en responder');
+      error.codigo = 'TIEMPO_AGOTADO';
+      rechazar(error);
+    }, ms);
+  });
+  return Promise.race([promesa, limite]).finally(() => clearTimeout(temporizador));
+}
+
+async function procesarMensaje(texto, sesionId, detectar = detectarIntencionDialogflow, tiempoMaximoMs = TIEMPO_MAXIMO_DIALOGFLOW_MS) {
+  const d = await conTiempoMaximo(Promise.resolve().then(() => detectar(texto, sesionId)), tiempoMaximoMs);
 
   if (d.esFallback || !d.intencion) {
     return { tipo: 'no_entendido', intencion: d.intencion || 'fallback', respuesta: MENSAJE_NO_ENTENDIDO, sugerencias: SUGERENCIAS };
