@@ -1,0 +1,317 @@
+{
+  "proyecto": "brillagest-asistente-lqnj",
+  "exportado": "2026-11-16T21:07:53.786Z",
+  "intenciones": [
+    {
+      "intencion": "ayuda_chatbot",
+      "esFallback": false,
+      "frases": [
+        "qué consultas atiendes",
+        "qué tipo de cosas sabes",
+        "sobre qué temas me puedes responder",
+        "qué preguntas puedo hacerte",
+        "cómo se usa este asistente",
+        "qué opciones tienes",
+        "cómo te uso",
+        "qué cosas puedo preguntarte",
+        "para qué sirves",
+        "qué sabes hacer",
+        "qué te puedo preguntar",
+        "en qué me puedes ayudar",
+        "cómo funcionas",
+        "qué puedes hacer",
+        "ayuda"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "consultar_producto",
+      "esFallback": false,
+      "frases": [
+        "me podrías dar el precio de la pulsera tejida",
+        "me regalas el precio del anillo solitario",
+        "me regalas el valor de los topos corazón",
+        "regálame el valor de la cadena de oro",
+        "me das el precio del reloj casio",
+        "me regalas el precio del dije corazón",
+        "cuánto vale el anillo clásico",
+        "tienen el anillo solitario corazón",
+        "información del anillo clásico",
+        "quiero el reloj clásico",
+        "me interesa la cadena veneciana",
+        "busco el dije corazón",
+        "busco la pulsera de plata",
+        "busco el anillo solitario",
+        "hay existencias del reloj clásico",
+        "qué precio tiene la cadena veneciana",
+        "tienen disponible la pulsera de plata",
+        "precio del dije corazón",
+        "cuánto cuesta el anillo solitario"
+      ],
+      "parametros": [
+        {
+          "nombre": "producto",
+          "entidad": "@sys.any"
+        }
+      ]
+    },
+    {
+      "intencion": "Default Fallback Intent",
+      "esFallback": true,
+      "frases": [],
+      "parametros": []
+    },
+    {
+      "intencion": "Default Welcome Intent",
+      "esFallback": false,
+      "frases": [
+        "buenos días",
+        "hola, cómo vas",
+        "qué más, buenas",
+        "saludos",
+        "hola buenas",
+        "buen día",
+        "buenas noches",
+        "hola",
+        "hey",
+        "hey ho",
+        "chao"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_compra_metales",
+      "esFallback": false,
+      "frases": [
+        "Compran oro y plata",
+        "compran oro",
+        "compran plata",
+        "quiero vender mi oro",
+        "dónde puedo vender oro",
+        "a cómo compran el gramo de oro",
+        "reciben oro usado",
+        "quiero vender una cadena de oro",
+        "compran joyas de plata",
+        "les puedo vender oro"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_contacto",
+      "esFallback": false,
+      "frases": [
+        "Contacto",
+        "cuál es su número",
+        "tienen WhatsApp",
+        "cómo los contacto",
+        "número de teléfono",
+        "tienen Instagram",
+        "cuáles son sus redes sociales",
+        "quiero hablar con alguien",
+        "cómo me comunico con ustedes",
+        "teléfono de contacto",
+        "tienen TikTok",
+        "cómo me pongo en contacto con la joyería",
+        "quiero comunicarme con la tienda",
+        "cómo contacto a la joyería",
+        "a qué número les puedo escribir",
+        "cuál es el medio de contacto de la joyería"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_encargos",
+      "esFallback": false,
+      "frases": [
+        "Diseños personalizados",
+        "hacen joyas personalizadas",
+        "puedo mandar a hacer un anillo",
+        "hacen diseños por encargo",
+        "quiero una joya a mi gusto",
+        "hacen argollas personalizadas",
+        "pueden hacer un dije con un nombre",
+        "puedo encargar un diseño",
+        "hacen joyas a la medida",
+        "fabrican joyas por pedido"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_envios",
+      "esFallback": false,
+      "frases": [
+        "¿Hacen envíos?",
+        "hacen envíos",
+        "hacen domicilios",
+        "envían a domicilio",
+        "me lo pueden enviar",
+        "tienen servicio a domicilio",
+        "hacen entregas",
+        "cuánto cuesta el envío",
+        "me pueden llevar el pedido",
+        "cómo me llega el producto",
+        "hacen envios",
+        "me lo mandan a la casa",
+        "envían a mi casa",
+        "lo pueden mandar a mi dirección",
+        "me pueden mandar el pedido",
+        "me envían la compra a domicilio"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_garantia",
+      "esFallback": false,
+      "frases": [
+        "Garantía",
+        "tienen garantía",
+        "los productos tienen garantía",
+        "qué pasa si la joya se daña",
+        "cuánto dura la garantía",
+        "la joya salió defectuosa",
+        "me dan garantía",
+        "los relojes tienen garantía",
+        "cómo hago válida la garantía",
+        "las joyas tienen garantia",
+        "me responden si la pulsera se daña",
+        "qué cubre la garantía",
+        "si la cadena sale defectuosa me la cambian",
+        "responden por daños de fábrica",
+        "si el reloj falla qué hacen"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_horario",
+      "esFallback": false,
+      "frases": [
+        "Horario de atención",
+        "a qué hora abren",
+        "cuál es el horario",
+        "a qué hora cierran",
+        "qué días atienden",
+        "hasta qué hora atienden",
+        "están abiertos hoy",
+        "abren los sábados",
+        "abren el domingo",
+        "cuál es su horario de atención",
+        "a que hora abren la tienda"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_medios_pago",
+      "esFallback": false,
+      "frases": [
+        "Medios de pago",
+        "cómo puedo pagar",
+        "aceptan tarjeta",
+        "reciben Nequi",
+        "puedo pagar con Daviplata",
+        "cuáles son las formas de pago",
+        "aceptan efectivo",
+        "qué métodos de pago tienen",
+        "se puede pagar por Nequi",
+        "puedo pagar con tarjeta de crédito",
+        "como se paga"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_servicios",
+      "esFallback": false,
+      "frases": [
+        "Arreglos y servicios",
+        "hacen arreglos de joyas",
+        "arreglan cadenas",
+        "hacen grabados",
+        "pueden grabar un anillo",
+        "limpian joyas",
+        "cambian la pila del reloj",
+        "qué servicios tienen",
+        "se me rompió la cadena",
+        "le cambian la batería al reloj",
+        "hacen mantenimiento de joyas",
+        "limpian anillos y cadenas",
+        "quiero que me limpien una pulsera",
+        "me pueden reparar un anillo",
+        "le cambian el broche a una cadena",
+        "pueden pulir unos aretes"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "faq_ubicacion",
+      "esFallback": false,
+      "frases": [
+        "Dónde están ubicados",
+        "cuál es la dirección",
+        "dónde queda la joyería",
+        "tienen tienda física",
+        "cómo llego a la tienda",
+        "dirección de la tienda",
+        "dónde los encuentro",
+        "dónde quedan",
+        "en qué parte de Bogotá están",
+        "me pasan la ubicación",
+        "donde queda la joyeria",
+        "dónde queda el local",
+        "cuál es la dirección del local",
+        "en qué dirección están ubicados",
+        "dirección del almacén"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "listar_categorias",
+      "esFallback": false,
+      "frases": [
+        "qué tipos de joyas hay",
+        "muéstrame el catálogo",
+        "qué tienen disponible",
+        "qué joyas manejan",
+        "qué productos venden",
+        "qué categorías tienen"
+      ],
+      "parametros": []
+    },
+    {
+      "intencion": "productos_categoria",
+      "esFallback": false,
+      "frases": [
+        "qué candongas con piedrería hay",
+        "ver tobilleras",
+        "me interesan las argollas",
+        "qué topos manejan",
+        "quiero ver relojes",
+        "tienen cadenas",
+        "muéstrame las pulseras",
+        "qué anillos tienen"
+      ],
+      "parametros": [
+        {
+          "nombre": "categoria",
+          "entidad": "@categoria"
+        }
+      ]
+    }
+  ],
+  "entidades": [
+    {
+      "entidad": "categoria",
+      "valores": [
+        "Anillos",
+        "Pulseras",
+        "Cadenas",
+        "Topos",
+        "Dijes",
+        "Aretes largos",
+        "Candongas",
+        "Candongas con piedrería",
+        "Argollas",
+        "Tobilleras",
+        "Relojes"
+      ]
+    }
+  ]
+}
